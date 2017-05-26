@@ -1,13 +1,13 @@
 package com.pwawrzyniak.tlog.model;
 
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Data
-@NoArgsConstructor
+@Builder
 public class BillItem {
 
     private BigDecimal cost;
