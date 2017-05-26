@@ -1,10 +1,6 @@
 buildscript {
 
-    ext {
-        springBootVersion = '1.5.3.RELEASE'
-
-        junitVersion = '4.12'
-    }
+    apply from: 'ext.gradle'
 
     repositories {
         mavenCentral()
@@ -28,8 +24,8 @@ subprojects {
     }
 
     dependencies {
-        compile("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
-
-        testCompile("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
+        testCompile "junit:junit:$junitVersion"
     }
+
+    bootRepackage.enabled = false
 }
