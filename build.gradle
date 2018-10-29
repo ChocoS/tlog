@@ -1,6 +1,12 @@
 buildscript {
+    ext {
+        springBootVersion = '1.5.3.RELEASE'
 
-    apply from: 'ext.gradle'
+        jacksonVersion = '2.8.8'
+        lombokVersion = '1.16.16'
+
+        junitVersion = '4.12'
+    }
 
     repositories {
         mavenCentral()
@@ -12,7 +18,6 @@ buildscript {
 }
 
 subprojects {
-
     apply plugin: 'java'
     apply plugin: 'org.springframework.boot'
 
