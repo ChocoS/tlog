@@ -1,0 +1,36 @@
+buildscript {
+    ext {
+        springBootVersion = "2.0.6.RELEASE"
+
+        jacksonVersion = "2.8.8"
+        lombokVersion = "1.16.16"
+
+        junitVersion = "4.12"
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}
+
+subprojects {
+    apply plugin: "java"
+    apply plugin: "idea"
+    apply plugin: 'io.spring.dependency-management'
+
+    group = "com.pwawrzyniak.tlog"
+    version = "0.0.1-SNAPSHOT"
+    sourceCompatibility = 1.8
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        testImplementation("junit:junit:$junitVersion")
+    }
+}
