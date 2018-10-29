@@ -7,5 +7,5 @@ import lombok.Data;
 @Builder
 public class Label {
 
-    private String value;
+  private String value;
 }
