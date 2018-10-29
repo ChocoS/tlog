@@ -1,2 +1,4 @@
-include 'server'
+rootProject.name = "tlog"
+
 include 'model'
+include 'server'

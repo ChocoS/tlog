@@ -10,6 +10,6 @@ import java.util.List;
 @Builder
 public class Bill {
 
-    private LocalDate date;
-    private List<BillItem> billItems;
+  private LocalDate date;
+  private List<BillItem> billItems;
 }

@@ -14,23 +14,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class BillControllerTest {
 
-    private MockMvc mockMvc;
+  private MockMvc mockMvc;
 
-    @Before
-    public void setup() {
+  @Before
+  public void setup() {
 
-        mockMvc = MockMvcBuilders.standaloneSetup(new BillController()).build();
-    }
+    mockMvc = MockMvcBuilders.standaloneSetup(new BillController()).build();
+  }
 
-    @Test
-    public void shouldReturnData() throws Exception {
+  @Test
+  public void shouldReturnData() throws Exception {
 
-        // when
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(BILL));
+    // when
+    ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(BILL));
 
-        // then
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[1].billItems[0].labelList[0].value", is("clothes")));
-    }
+    // then
+    resultActions
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[1].billItems[0].tags[0]", is("clothes")));
+  }
 }
