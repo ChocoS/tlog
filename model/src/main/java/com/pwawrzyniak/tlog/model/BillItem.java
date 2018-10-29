@@ -10,8 +10,8 @@ import java.util.List;
 @Builder
 public class BillItem {
 
-  private BigDecimal cost;
+  private Long cost;
   private String description;
-  private List<Label> labelList;
+  private List<String> tags;
   private String expression;
 }
