@@ -3,9 +3,9 @@ apply plugin: "org.springframework.boot"
 dependencies {
     implementation project(":model")
 
-    implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
+    implementation("org.springframework.boot:spring-boot-starter-web")
 
-    runtime("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
+    runtime("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
-    testImplementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
 }

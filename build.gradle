@@ -1,19 +1,10 @@
 buildscript {
-    ext {
-        springBootVersion = "2.0.6.RELEASE"
-
-        jacksonVersion = "2.8.8"
-        lombokVersion = "1.16.16"
-
-        junitVersion = "4.12"
-    }
-
     repositories {
         mavenCentral()
     }
 
     dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.1.0.RELEASE")
     }
 }
 
@@ -24,13 +15,19 @@ subprojects {
 
     group = "com.pwawrzyniak.tlog"
     version = "0.0.1-SNAPSHOT"
-    sourceCompatibility = 1.8
+    sourceCompatibility = JavaVersion.VERSION_11
 
     repositories {
         mavenCentral()
     }
 
+    dependencyManagement {
+        imports {
+            mavenBom org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
+        }
+    }
+
     dependencies {
-        testImplementation("junit:junit:$junitVersion")
+        testImplementation("junit:junit")
     }
 }
