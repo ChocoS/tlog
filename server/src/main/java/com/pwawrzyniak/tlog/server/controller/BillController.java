@@ -12,11 +12,11 @@ import java.util.List;
 
 import static com.pwawrzyniak.tlog.server.controller.ControllerPaths.BILL;
 
-@RestController(BILL)
+@RestController
 public class BillController {
 
-  @GetMapping
-  List<Bill> getBill() {
+  @GetMapping(BILL)
+  public List<Bill> getBill() {
 
     return getMockData();
   }

@@ -1,5 +1,5 @@
 server:
-  context-path: /tlog
+  context-path: /tlog # TODO looks like it's ignored when vaadin works
   port: 8080
 
 spring:

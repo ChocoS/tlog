@@ -1,0 +1,7 @@
+ext {
+    vaadinVersion = "10.0.6"
+}
+
+dependencies {
+    compile("com.vaadin:vaadin-spring-boot-starter:$vaadinVersion")
+}

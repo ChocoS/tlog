@@ -18,13 +18,11 @@ public class BillControllerTest {
 
   @Before
   public void setup() {
-
     mockMvc = MockMvcBuilders.standaloneSetup(new BillController()).build();
   }
 
   @Test
   public void shouldReturnData() throws Exception {
-
     // when
     ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(BILL));
 
