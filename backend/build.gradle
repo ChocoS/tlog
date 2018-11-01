@@ -1,0 +1,7 @@
+dependencies {
+    // service
+    compile "org.springframework:spring-context"
+
+    // model
+    compileOnly "org.projectlombok:lombok"
+}

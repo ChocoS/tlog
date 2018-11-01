@@ -1,5 +1,5 @@
 rootProject.name = "tlog"
 
-include "model"
+include "backend"
 include "web-vaadin"
 include "server"

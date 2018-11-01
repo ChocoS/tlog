@@ -1,5 +1,6 @@
 package com.pwawrzyniak.tlog.server.controller;
 
+import com.pwawrzyniak.tlog.backend.service.MockDataProvider;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.test.web.servlet.MockMvc;
@@ -18,7 +19,9 @@ public class BillControllerTest {
 
   @Before
   public void setup() {
-    mockMvc = MockMvcBuilders.standaloneSetup(new BillController()).build();
+    BillController billController = new BillController();
+    billController.mockDataProvider = new MockDataProvider();
+    mockMvc = MockMvcBuilders.standaloneSetup(billController).build();
   }
 
   @Test

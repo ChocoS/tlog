@@ -1,4 +1,4 @@
-package com.pwawrzyniak.tlog.model;
+package com.pwawrzyniak.tlog.backend.model;
 
 import lombok.Builder;
 import lombok.Data;

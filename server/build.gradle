@@ -1,7 +1,7 @@
 apply plugin: "org.springframework.boot"
 
 dependencies {
-    compile project(":model")
+    compile project(":backend")
     compile project(":web-vaadin")
 
     compile("org.springframework.boot:spring-boot-starter-web")
