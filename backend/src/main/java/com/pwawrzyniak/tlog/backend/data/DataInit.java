@@ -1,6 +1,8 @@
 package com.pwawrzyniak.tlog.backend.data;
 
 import com.pwawrzyniak.tlog.backend.model.BillItem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -12,6 +14,8 @@ import java.util.Collections;
 @Service
 public class DataInit implements ApplicationRunner {
 
+  private static Logger log = LoggerFactory.getLogger(DataInit.class);
+
   @Autowired
   private BillItemRepository billItemRepository;
 
@@ -19,6 +23,7 @@ public class DataInit implements ApplicationRunner {
   public void run(ApplicationArguments args) throws Exception {
     long count = billItemRepository.count();
     if (count == 0) {
+      log.info("Database empty. Creating test data...");
       BillItem billItem1 = BillItem.builder()
           .cost(1234L)
           .description("sample description")
@@ -33,6 +38,8 @@ public class DataInit implements ApplicationRunner {
 
       billItemRepository.save(billItem1);
       billItemRepository.save(billItem2);
+    } else {
+      log.info("Database contains data (count: {}). No test data created.", count);
     }
   }
 }
