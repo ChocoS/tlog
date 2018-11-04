@@ -32,6 +32,6 @@ public class BillControllerTest {
     // then
     resultActions
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$[1].billItems[0].tags[0]", is("clothes")));
+        .andExpect(jsonPath("$[1].billItems[0].tags[0].name", is("clothes")));
   }
 }
