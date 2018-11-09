@@ -16,6 +16,7 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import java.math.BigDecimal;
 import java.util.Set;
 
 @Data
@@ -32,7 +33,7 @@ public class BillItem {
   private Long id;
 
   @Column(nullable = false)
-  private Long cost;
+  private BigDecimal cost;
 
   @Column
   private String description;
