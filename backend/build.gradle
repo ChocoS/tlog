@@ -5,4 +5,6 @@ dependencies {
     runtimeOnly "com.h2database:h2"
     runtimeOnly "javax.xml.bind:jaxb-api"
     runtimeOnly "org.javassist:javassist:3.23.1-GA"
+    testCompile "org.mockito:mockito-core"
+    testCompile "junit:junit"
 }

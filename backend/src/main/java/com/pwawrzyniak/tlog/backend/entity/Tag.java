@@ -1,4 +1,4 @@
-package com.pwawrzyniak.tlog.backend.model;
+package com.pwawrzyniak.tlog.backend.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
