@@ -26,6 +26,7 @@ public class BillService {
   @Autowired
   private DtoToEntityConverter dtoToEntityConverter;
 
+  @Transactional
   public List<BillDto> findAllBills() {
     List<BillDto> billDtoList = billRepository.findAll().stream().map(entityToDtoConverter::convertBill).collect(Collectors.toList());
     log.info("Found {} bills", billDtoList.size());

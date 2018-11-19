@@ -8,6 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class TagService {
 
@@ -24,5 +27,10 @@ public class TagService {
       log.info("Created tag: {}", name);
     }
     return tag;
+  }
+
+  @Transactional
+  public List<String> findAllTagsSorted() {
+    return tagRepository.findAllByOrderByNameAsc().stream().map(Tag::getName).collect(Collectors.toList());
   }
 }
