@@ -1,5 +1,6 @@
 package com.pwawrzyniak.tlog.web.vaadin;
 
+import com.pwawrzyniak.tlog.backend.dto.BillItemDto;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -15,19 +16,24 @@ import java.util.Set;
 
 public class BillItemEditorView extends VerticalLayout {
 
+  private Set<String> selectedTags;
+  private TextField descriptionTextField;
+  private TextField costTextField;
+  private TextField expressionTextField;
+
   public BillItemEditorView(List<String> tags) {
     FormLayout selectedTagsComponent = new FormLayout();
     selectedTagsComponent.setWidth("100%");
 
-    TextField expressionTextField = new TextField();
+    expressionTextField = new TextField();
     expressionTextField.setLabel("Expression");
 
-    TextField valueTextField = new TextField();
-    valueTextField.setLabel("Value");
-    valueTextField.setReadOnly(true);
-    valueTextField.setTabIndex(-1);
+    costTextField = new TextField();
+    costTextField.setLabel("Cost");
+    costTextField.setReadOnly(true);
+    costTextField.setTabIndex(-1);
 
-    TextField descriptionTextField = new TextField();
+    descriptionTextField = new TextField();
     descriptionTextField.setLabel("Description");
     descriptionTextField.setWidth("24em");
 
@@ -36,7 +42,7 @@ public class BillItemEditorView extends VerticalLayout {
 
     HorizontalLayout horizontalLayout = new HorizontalLayout();
     horizontalLayout.add(expressionTextField);
-    horizontalLayout.add(valueTextField);
+    horizontalLayout.add(costTextField);
     horizontalLayout.add(tagsComboBox);
     horizontalLayout.add(descriptionTextField);
     horizontalLayout.setWidth("100%");
@@ -50,9 +56,18 @@ public class BillItemEditorView extends VerticalLayout {
     setPadding(false);
   }
 
+  public BillItemDto readBillItemDto() {
+    return BillItemDto.builder()
+        .cost(expressionTextField.getValue()) // fix this in #21
+        .description(descriptionTextField.getValue())
+        .expression(expressionTextField.getValue())
+        .tags(selectedTags)
+        .build();
+  }
+
   private ComboBox<String> createTagsComboBox(List<String> tags, FormLayout selectedTagsComponent) {
     ComboBox<String> tagsComboBox = new ComboBox<>();
-    Set<String> selectedTags = new HashSet<>();
+    selectedTags = new HashSet<>();
 
     tagsComboBox.setItems(tags);
     tagsComboBox.setAllowCustomValue(true);

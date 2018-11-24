@@ -31,6 +31,8 @@ public class TagService {
 
   @Transactional
   public List<String> findAllTagsSorted() {
-    return tagRepository.findAllByOrderByNameAsc().stream().map(Tag::getName).collect(Collectors.toList());
+    List<String> tags = tagRepository.findAllByOrderByNameAsc().stream().map(Tag::getName).collect(Collectors.toList());
+    log.info("Found {} tags", tags.size());
+    return tags;
   }
 }
