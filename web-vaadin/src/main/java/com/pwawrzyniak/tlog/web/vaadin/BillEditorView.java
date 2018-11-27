@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,6 +34,7 @@ public class BillEditorView extends VerticalLayout {
 
   private List<String> tags;
   private List<BillItemEditorView> billItemEditorViews = new ArrayList<>();
+  private TextField totalValueTextField = new TextField("Total");
 
   private TagService tagService;
 
@@ -40,17 +42,17 @@ public class BillEditorView extends VerticalLayout {
     this.tagService = tagService;
     tags = tagService.findAllTagsSorted();
 
-    IntStream.range(0, DEFAULT_NUMBER_OF_BILL_ITEMS).forEach(i -> billItemEditorViews.add(new BillItemEditorView(tags)));
+    IntStream.range(0, DEFAULT_NUMBER_OF_BILL_ITEMS).forEach(i -> billItemEditorViews.add(new BillItemEditorView(tags, this)));
 
     DatePicker billDate = new DatePicker("Date");
 
-    TextField totalValueTextField = new TextField("Total");
+    totalValueTextField.setValue("0");
     totalValueTextField.setReadOnly(true);
     totalValueTextField.setTabIndex(-1);
 
     Button addBillItemButton = new Button("Add bill item", event -> {
       if (billItemEditorViews.size() < MAX_NUMBER_OF_BILL_ITEMS) {
-        BillItemEditorView billItemEditorView = new BillItemEditorView(tags);
+        BillItemEditorView billItemEditorView = new BillItemEditorView(tags, this);
         billItemEditorViews.add(billItemEditorView);
         this.add(billItemEditorView);
       }
@@ -60,6 +62,7 @@ public class BillEditorView extends VerticalLayout {
         BillItemEditorView billItemEditorView = billItemEditorViews.get(billItemEditorViews.size() - 1);
         billItemEditorViews.remove(billItemEditorView);
         this.remove(billItemEditorView);
+        recalculateTotal();
       }
     });
     Button saveBillButton = new Button("Save bill", event -> {
@@ -97,7 +100,16 @@ public class BillEditorView extends VerticalLayout {
     tags = tagService.findAllTagsSorted();
     billItemEditorViews.forEach(this::remove);
     billItemEditorViews.clear();
-    IntStream.range(0, DEFAULT_NUMBER_OF_BILL_ITEMS).forEach(i -> billItemEditorViews.add(new BillItemEditorView(tags)));
+    IntStream.range(0, DEFAULT_NUMBER_OF_BILL_ITEMS).forEach(i -> billItemEditorViews.add(new BillItemEditorView(tags, this)));
     billItemEditorViews.forEach(this::add);
+    totalValueTextField.setValue("0");
+  }
+
+  public void recalculateTotal() {
+    BigDecimal total = billItemEditorViews.stream()
+        .map(BillItemEditorView::readCost)
+        .map(BigDecimal::new)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+    totalValueTextField.setValue(total.toPlainString());
   }
 }

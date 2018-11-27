@@ -14,27 +14,38 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static com.pwawrzyniak.tlog.web.vaadin.utils.Eval.eval;
+import static com.pwawrzyniak.tlog.web.vaadin.utils.ExpressionNormalizer.isNormalized;
+import static com.pwawrzyniak.tlog.web.vaadin.utils.ExpressionNormalizer.normalize;
+
 public class BillItemEditorView extends VerticalLayout {
 
-  private Set<String> selectedTags;
-  private TextField descriptionTextField;
-  private TextField costTextField;
-  private TextField expressionTextField;
+  private BillEditorView billEditorView;
+  private Set<String> selectedTags = new HashSet<>();
+  private TextField descriptionTextField = new TextField("Description");
+  private TextField costTextField = new TextField("Cost");
+  private TextField expressionTextField = new TextField("Expression");
 
-  public BillItemEditorView(List<String> tags) {
+  public BillItemEditorView(List<String> tags, BillEditorView billEditorView) {
+    this.billEditorView = billEditorView;
     FormLayout selectedTagsComponent = new FormLayout();
     selectedTagsComponent.setWidth("100%");
 
-    expressionTextField = new TextField();
-    expressionTextField.setLabel("Expression");
+    expressionTextField.addValueChangeListener(event -> {
+      String value = event.getValue();
+      if (!isNormalized(value)) {
+        value = normalize(value);
+        expressionTextField.setValue(value);
+      } else {
+        costTextField.setValue(eval(value).toPlainString());
+        billEditorView.recalculateTotal();
+      }
+    });
 
-    costTextField = new TextField();
-    costTextField.setLabel("Cost");
+    costTextField.setValue("0");
     costTextField.setReadOnly(true);
     costTextField.setTabIndex(-1);
 
-    descriptionTextField = new TextField();
-    descriptionTextField.setLabel("Description");
     descriptionTextField.setWidth("24em");
 
     ComboBox<String> tagsComboBox = createTagsComboBox(tags, selectedTagsComponent);
@@ -58,16 +69,19 @@ public class BillItemEditorView extends VerticalLayout {
 
   public BillItemDto readBillItemDto() {
     return BillItemDto.builder()
-        .cost(expressionTextField.getValue()) // fix this in #21
+        .cost(costTextField.getValue())
         .description(descriptionTextField.getValue())
         .expression(expressionTextField.getValue())
         .tags(selectedTags)
         .build();
   }
 
+  public String readCost() {
+    return costTextField.getValue();
+  }
+
   private ComboBox<String> createTagsComboBox(List<String> tags, FormLayout selectedTagsComponent) {
     ComboBox<String> tagsComboBox = new ComboBox<>();
-    selectedTags = new HashSet<>();
 
     tagsComboBox.setItems(tags);
     tagsComboBox.setAllowCustomValue(true);
