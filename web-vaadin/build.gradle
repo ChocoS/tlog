@@ -4,5 +4,5 @@ ext {
 
 dependencies {
     compile project(":backend")
-    compile("com.vaadin:vaadin-spring-boot-starter:$vaadinVersion")
+    compile "com.vaadin:vaadin-spring-boot-starter:$vaadinVersion"
 }

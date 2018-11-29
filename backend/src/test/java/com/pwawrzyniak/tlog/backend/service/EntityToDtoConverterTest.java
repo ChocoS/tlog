@@ -30,7 +30,7 @@ public class EntityToDtoConverterTest {
     // then
     assertTrue(12 == billDto.getId());
     assertEquals(LocalDate.of(2018, 10, 22), billDto.getDate());
-    assertEquals("135.33", billDto.getCost());
+    assertEquals("135.33", billDto.getTotalCost());
     assertNotNull(billDto.getBillItems());
     assertEquals(2, billDto.getBillItems().size());
     // first bill item

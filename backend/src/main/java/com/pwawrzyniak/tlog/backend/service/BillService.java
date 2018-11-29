@@ -9,13 +9,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class BillService {
 
   private static Logger log = LoggerFactory.getLogger(BillService.class);
+
+  @Autowired
+  private Validator validator;
 
   @Autowired
   private BillRepository billRepository;
@@ -34,8 +40,20 @@ public class BillService {
   }
 
   @Transactional
-  public void saveBill(BillDto billDto) {
-    Bill bill = billRepository.save(dtoToEntityConverter.convertBillDto(billDto));
-    log.info("New bill saved with id {}: {}", bill.getId(), billDto);
+  public boolean saveBill(BillDto billDto) {
+    if (isValid(billDto)) {
+      Bill bill = billRepository.save(dtoToEntityConverter.convertBillDto(billDto));
+      log.info("New bill saved with id {}: {}", bill.getId(), billDto);
+      return true;
+    }
+    return false;
+  }
+
+  public Set<ConstraintViolation<BillDto>> validate(BillDto billDto) {
+    return validator.validate(billDto);
+  }
+
+  private boolean isValid(BillDto billDto) {
+    return validate(billDto).isEmpty();
   }
 }

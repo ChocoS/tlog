@@ -14,9 +14,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static com.pwawrzyniak.tlog.web.vaadin.utils.Eval.eval;
-import static com.pwawrzyniak.tlog.web.vaadin.utils.ExpressionNormalizer.isNormalized;
-import static com.pwawrzyniak.tlog.web.vaadin.utils.ExpressionNormalizer.normalize;
+import static com.pwawrzyniak.tlog.backend.validation.ExpressionEvaluator.evaluate;
+import static com.pwawrzyniak.tlog.backend.validation.ExpressionEvaluator.isValid;
+import static com.pwawrzyniak.tlog.backend.validation.ExpressionNormalizer.isNormalized;
+import static com.pwawrzyniak.tlog.backend.validation.ExpressionNormalizer.normalize;
+import static com.pwawrzyniak.tlog.backend.validation.ValidationConstants.EXPRESSION_PATTERN;
+import static com.pwawrzyniak.tlog.backend.validation.ValidationConstants.MAX_DESCRIPTION_SIZE;
+import static com.pwawrzyniak.tlog.backend.validation.ValidationConstants.MAX_EXPRESSION_SIZE;
+import static com.pwawrzyniak.tlog.backend.validation.ValidationConstants.MAX_TAG_SIZE;
 
 public class BillItemEditorView extends VerticalLayout {
 
@@ -37,16 +42,25 @@ public class BillItemEditorView extends VerticalLayout {
         value = normalize(value);
         expressionTextField.setValue(value);
       } else {
-        costTextField.setValue(eval(value).toPlainString());
+        costTextField.setValue(evaluate(value).toPlainString());
         billEditorView.recalculateTotal();
       }
     });
+    expressionTextField.addFocusListener(event -> expressionTextField.setInvalid(false));
+    expressionTextField.addBlurListener(event ->
+        expressionTextField.setInvalid(!isValid(expressionTextField.getValue())));
+    expressionTextField.setPattern(EXPRESSION_PATTERN);
+    expressionTextField.setPreventInvalidInput(true);
+    expressionTextField.setErrorMessage("Invalid expression");
+    expressionTextField.setMaxLength(MAX_EXPRESSION_SIZE);
 
     costTextField.setValue("0");
     costTextField.setReadOnly(true);
     costTextField.setTabIndex(-1);
 
     descriptionTextField.setWidth("24em");
+    descriptionTextField.setMaxLength(MAX_DESCRIPTION_SIZE);
+    descriptionTextField.setErrorMessage("Description is too long");
 
     ComboBox<String> tagsComboBox = createTagsComboBox(tags, selectedTagsComponent);
     tagsComboBox.setLabel("Tags");
@@ -58,6 +72,7 @@ public class BillItemEditorView extends VerticalLayout {
     horizontalLayout.add(descriptionTextField);
     horizontalLayout.setWidth("100%");
     horizontalLayout.setPadding(false);
+    horizontalLayout.setAlignItems(Alignment.START);
 
     add(horizontalLayout);
     add(selectedTagsComponent);
@@ -68,12 +83,21 @@ public class BillItemEditorView extends VerticalLayout {
   }
 
   public BillItemDto readBillItemDto() {
+    String expression = expressionTextField.getValue();
+    String description = descriptionTextField.getValue();
+    if (isNullOrBlank(expression) && isNullOrBlank(description) && selectedTags.isEmpty()) {
+      return null;
+    }
     return BillItemDto.builder()
         .cost(costTextField.getValue())
         .description(descriptionTextField.getValue())
-        .expression(expressionTextField.getValue())
+        .expression(expression)
         .tags(selectedTags)
         .build();
+  }
+
+  private boolean isNullOrBlank(String string) {
+    return string == null || string.isBlank();
   }
 
   public String readCost() {
@@ -85,9 +109,13 @@ public class BillItemEditorView extends VerticalLayout {
 
     tagsComboBox.setItems(tags);
     tagsComboBox.setAllowCustomValue(true);
+    tagsComboBox.setErrorMessage("Tag is too long");
+    tagsComboBox.addFocusListener(event -> tagsComboBox.setInvalid(false));
     tagsComboBox.addCustomValueSetListener(event -> {
       String value = event.getDetail();
-      if (!selectedTags.contains(value)) {
+      if (value.length() > MAX_TAG_SIZE) {
+        tagsComboBox.setInvalid(true);
+      } else if (!selectedTags.contains(value)) {
         Button tagButton = new Button(value, new Icon(VaadinIcon.CLOSE_SMALL));
         tagButton.setIconAfterText(true);
         tagButton.addClickListener(clicked -> {
@@ -99,6 +127,7 @@ public class BillItemEditorView extends VerticalLayout {
       }
     });
     tagsComboBox.addValueChangeListener(event -> {
+      tagsComboBox.setInvalid(false);
       String value = event.getValue();
       if (!event.getSource().isEmpty() && !selectedTags.contains(value)) {
         Button tagButton = new Button(value, new Icon(VaadinIcon.CLOSE_SMALL));

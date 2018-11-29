@@ -7,6 +7,7 @@ import com.pwawrzyniak.tlog.web.vaadin.events.Broadcaster;
 import com.pwawrzyniak.tlog.web.vaadin.events.Event;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -17,11 +18,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.validation.ConstraintViolation;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static com.vaadin.flow.component.notification.Notification.Position.TOP_CENTER;
 
 @SpringComponent
 @UIScope
@@ -45,6 +53,7 @@ public class BillEditorView extends VerticalLayout {
     IntStream.range(0, DEFAULT_NUMBER_OF_BILL_ITEMS).forEach(i -> billItemEditorViews.add(new BillItemEditorView(tags, this)));
 
     DatePicker billDate = new DatePicker("Date");
+    billDate.setMax(LocalDate.now());
 
     totalValueTextField.setValue("0");
     totalValueTextField.setReadOnly(true);
@@ -67,12 +76,25 @@ public class BillEditorView extends VerticalLayout {
     });
     Button saveBillButton = new Button("Save bill", event -> {
       BillDto billDto = BillDto.builder().date(billDate.getValue())
-          .billItems(billItemEditorViews.stream().map(BillItemEditorView::readBillItemDto).collect(Collectors.toList()))
+          .billItems(billItemEditorViews.stream().map(BillItemEditorView::readBillItemDto)
+              .filter(Objects::nonNull).collect(Collectors.toList()))
           .build();
-      billService.saveBill(billDto);
-      clearBillForms();
-      showConfirmation(billDto);
-      fireSaveNewBillEvent();
+      Set<ConstraintViolation<BillDto>> constraintViolations = billService.validate(billDto);
+      if (constraintViolations.isEmpty()) {
+        billService.saveBill(billDto);
+        clearBillForms();
+        showConfirmation(billDto);
+        fireSaveNewBillEvent();
+      } else {
+        List<String> messageLines = new ArrayList<>();
+        messageLines.add("Bill is not valid! Violations:");
+        constraintViolations.forEach(violation -> {
+          messageLines.add(violation.getPropertyPath().toString() + ": " +
+              violation.getMessage() + ", invalid value: " + violation.getInvalidValue());
+        });
+        Collections.sort(messageLines);
+        showMessage(messageLines);
+      }
     });
 
     HorizontalLayout horizontalLayout = new HorizontalLayout();
@@ -93,7 +115,19 @@ public class BillEditorView extends VerticalLayout {
   }
 
   private void showConfirmation(BillDto billDto) {
-    Notification.show("Bill saved: " + billDto, 5000, Notification.Position.TOP_CENTER);
+    Notification.show("Bill saved: " + billDto, 5000, TOP_CENTER);
+  }
+
+  private void showMessage(List<String> messageLines) {
+    Notification notification = new Notification();
+    messageLines.forEach(line -> {
+      Div div = new Div();
+      div.setText(line);
+      notification.add(div);
+    });
+    notification.setDuration(5000);
+    notification.setPosition(TOP_CENTER);
+    notification.open();
   }
 
   private void clearBillForms() {

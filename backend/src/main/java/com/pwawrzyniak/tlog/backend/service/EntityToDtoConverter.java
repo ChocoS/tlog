@@ -18,7 +18,7 @@ public class EntityToDtoConverter {
         .id(bill.getId())
         .date(bill.getDate())
         .billItems(bill.getBillItems().stream().map(this::convertBillItem).collect(Collectors.toList()))
-        .cost(bill.getBillItems().stream().map(BillItem::getCost).reduce(BigDecimal.ZERO, BigDecimal::add).toString())
+        .totalCost(bill.getBillItems().stream().map(BillItem::getCost).reduce(BigDecimal.ZERO, BigDecimal::add).toString())
         .build();
   }
 

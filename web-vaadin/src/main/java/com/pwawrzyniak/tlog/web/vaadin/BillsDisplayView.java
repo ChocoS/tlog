@@ -43,7 +43,7 @@ public class BillsDisplayView extends VerticalLayout { // wrapping layout is nee
     billsGrid.setItems(bills);
     billsGrid.addColumn(new LocalDateRenderer<>(BillDto::getDate, ofLocalizedDate(FormatStyle.SHORT)))
         .setHeader("Date").setFlexGrow(0).setWidth("100px");
-    billsGrid.addColumn(BillDto::getCost).setHeader("Cost").setFlexGrow(0).setWidth("100px");
+    billsGrid.addColumn(BillDto::getTotalCost).setHeader("Cost").setFlexGrow(0).setWidth("100px");
     billsGrid.addColumn(new ComponentRenderer<>(this::billItemDisplayComponent)).setHeader("Bill items").setFlexGrow(0).setWidth("600px");
     billsGrid.getStyle().set("border", "1px solid gray");
     billsGrid.setSelectionMode(Grid.SelectionMode.NONE);
