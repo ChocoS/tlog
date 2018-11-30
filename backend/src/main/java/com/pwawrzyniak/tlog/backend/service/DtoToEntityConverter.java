@@ -29,7 +29,7 @@ public class DtoToEntityConverter {
     return BillItem.builder()
         .cost(new BigDecimal(billItemDto.getCost()))
         .description(billItemDto.getDescription())
-        .tags(billItemDto.getTags().stream().map(String::toLowerCase).map(tagService::getOrCreateTagByName).collect(Collectors.toSet()))
+        .tags(billItemDto.getTags().stream().map(String::toLowerCase).distinct().map(tagService::getOrCreateTagByName).collect(Collectors.toSet()))
         .expression(billItemDto.getExpression())
         .build();
   }

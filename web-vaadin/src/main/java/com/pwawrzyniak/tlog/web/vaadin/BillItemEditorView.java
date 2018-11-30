@@ -112,7 +112,7 @@ public class BillItemEditorView extends VerticalLayout {
     tagsComboBox.setErrorMessage("Tag is too long");
     tagsComboBox.addFocusListener(event -> tagsComboBox.setInvalid(false));
     tagsComboBox.addCustomValueSetListener(event -> {
-      String value = event.getDetail();
+      String value = event.getDetail().toLowerCase();
       if (value.length() > MAX_TAG_SIZE) {
         tagsComboBox.setInvalid(true);
       } else if (!selectedTags.contains(value)) {
@@ -128,8 +128,11 @@ public class BillItemEditorView extends VerticalLayout {
     });
     tagsComboBox.addValueChangeListener(event -> {
       tagsComboBox.setInvalid(false);
-      String value = event.getValue();
-      if (!event.getSource().isEmpty() && !selectedTags.contains(value)) {
+      if (event.getSource().isEmpty()) {
+        return;
+      }
+      String value = event.getValue().toLowerCase();
+      if (!selectedTags.contains(value)) {
         Button tagButton = new Button(value, new Icon(VaadinIcon.CLOSE_SMALL));
         tagButton.setIconAfterText(true);
         tagButton.addClickListener(clicked -> {

@@ -37,7 +37,7 @@ public class DtoToEntityConverterTest {
   public void shouldProperlyConvertBillDtoToEntity() {
     // given
     BillDto billDto = bill(LocalDate.of(2018, 10, 15),
-        billItem("12.34", "12+0.34", "mleko", "Food"),
+        billItem("12.34", "12+0.34", "mleko", "Food", "food"),
         billItem("20.99", "10+4.5+6.49", "chemia", "maintenance"));
 
     // when
