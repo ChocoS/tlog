@@ -19,6 +19,10 @@ public class EntityToDtoConverter {
         .date(bill.getDate())
         .billItems(bill.getBillItems().stream().map(this::convertBillItem).collect(Collectors.toList()))
         .totalCost(bill.getBillItems().stream().map(BillItem::getCost).reduce(BigDecimal.ZERO, BigDecimal::add).toString())
+        .createdAt(bill.getCreatedAt())
+        .createdBy(bill.getCreatedBy())
+        .lastModifiedAt(bill.getLastModifiedAt())
+        .lastModifiedBy(bill.getLastModifiedBy())
         .build();
   }
 

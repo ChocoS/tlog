@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Set;
 
@@ -30,6 +31,10 @@ public class EntityToDtoConverterTest {
     // then
     assertTrue(12 == billDto.getId());
     assertEquals(LocalDate.of(2018, 10, 22), billDto.getDate());
+    assertEquals(LocalDateTime.of(2018, 10, 23, 10, 34), billDto.getCreatedAt());
+    assertEquals("user1", billDto.getCreatedBy());
+    assertEquals(LocalDateTime.of(2018, 10, 24, 23, 11), billDto.getLastModifiedAt());
+    assertEquals("user2", billDto.getLastModifiedBy());
     assertEquals("135.33", billDto.getTotalCost());
     assertNotNull(billDto.getBillItems());
     assertEquals(2, billDto.getBillItems().size());
@@ -43,6 +48,10 @@ public class EntityToDtoConverterTest {
 
   private Bill givenSampleBill() {
     Bill bill = Bill.builder()
+        .createdAt(LocalDateTime.of(2018, 10, 23, 10, 34))
+        .createdBy("user1")
+        .lastModifiedAt(LocalDateTime.of(2018, 10, 24, 23, 11))
+        .lastModifiedBy("user2")
         .id(12L)
         .date(LocalDate.of(2018, 10, 22))
         .billItems(Arrays.asList(
