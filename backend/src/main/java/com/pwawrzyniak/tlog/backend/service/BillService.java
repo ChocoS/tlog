@@ -34,7 +34,7 @@ public class BillService {
 
   @Transactional
   public List<BillDto> findAllBills() {
-    List<BillDto> billDtoList = billRepository.findAll().stream().map(entityToDtoConverter::convertBill).collect(Collectors.toList());
+    List<BillDto> billDtoList = billRepository.findAllByOrderByDateDesc().stream().map(entityToDtoConverter::convertBill).collect(Collectors.toList());
     log.info("Found {} bills", billDtoList.size());
     return billDtoList;
   }
