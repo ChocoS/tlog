@@ -15,7 +15,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
-import javax.persistence.Table;
 import java.math.BigDecimal;
 import java.util.Set;
 
@@ -24,7 +23,6 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table
 public class BillItem {
 
   @Id
@@ -35,7 +33,6 @@ public class BillItem {
   @Column(nullable = false)
   private BigDecimal cost;
 
-  @Column
   private String description;
 
   @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE})

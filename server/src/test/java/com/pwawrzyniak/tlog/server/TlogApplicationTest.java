@@ -2,10 +2,15 @@ package com.pwawrzyniak.tlog.server;
 
 import com.pwawrzyniak.tlog.backend.dto.BillDto;
 import com.pwawrzyniak.tlog.backend.service.BillService;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -24,6 +29,15 @@ public class TlogApplicationTest {
 
   @Autowired
   private BillService billService;
+
+  @BeforeClass
+  public static void setupClass() {
+    Authentication authentication = Mockito.mock(Authentication.class);
+    Mockito.when(authentication.getName()).thenReturn("user");
+    SecurityContext securityContext = Mockito.mock(SecurityContext.class);
+    Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+    SecurityContextHolder.setContext(securityContext);
+  }
 
   @Test
   public void billServiceIntegrationTest() {
@@ -46,5 +60,8 @@ public class TlogApplicationTest {
     billDtoList = billService.findAllBills();
     assertEquals(9, billDtoList.size());
     assertTrue(billDtoList.get(0).getDate().equals(now));
+
+    // check who created bills
+    billDtoList.forEach(bill -> assertEquals("user", bill.getCreatedBy()));
   }
 }

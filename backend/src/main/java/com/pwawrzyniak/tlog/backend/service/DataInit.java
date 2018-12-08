@@ -2,6 +2,8 @@ package com.pwawrzyniak.tlog.backend.service;
 
 import com.pwawrzyniak.tlog.backend.dto.BillDto;
 import com.pwawrzyniak.tlog.backend.dto.BillItemDto;
+import com.pwawrzyniak.tlog.backend.entity.Privilege;
+import com.pwawrzyniak.tlog.backend.service.security.UserDetailsServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +26,27 @@ public class DataInit implements ApplicationRunner {
   @Autowired
   private BillService billService;
 
+  @Autowired
+  private UserDetailsServiceImpl userDetailsService;
+
   @Override
   public void run(ApplicationArguments args) throws Exception {
+    initializeUsers();
+    initializeBills();
+  }
+
+  private void initializeUsers() {
+    Privilege readPrivilege = userDetailsService.createPrivilegeIfNotFound("READ_PRIVILEGE");
+    Privilege writePrivilege = userDetailsService.createPrivilegeIfNotFound("WRITE_PRIVILEGE");
+
+    userDetailsService.createRoleIfNotFound("ROLE_ADMIN", Arrays.asList(readPrivilege, writePrivilege));
+    userDetailsService.createRoleIfNotFound("ROLE_USER", Arrays.asList(readPrivilege));
+
+    userDetailsService.registerNewUserAccount("admin", "admin", "adminName", "adminLastName", "ROLE_ADMIN");
+    userDetailsService.registerNewUserAccount("user", "user", "userName", "userLastName", "ROLE_USER");
+  }
+
+  private void initializeBills() {
     long count = billService.findAllBills().size();
     if (count == 0) {
       log.info("Database empty. Creating test repository...");
