@@ -21,7 +21,7 @@ public class MainView extends VerticalLayout {
     Button logoutButton = new Button("Logout");
     logoutButton.getElement().setAttribute("onclick", "window.open('logout', '_self')");
     UserDto userDto = userDetailsService.getLoggedInUser();
-    Label label = new Label("logged in as " + userDto.getFirstName() + " " + userDto.getLastName());
+    Label label = new Label("Hello " + userDto.getFirstName());
 
     HorizontalLayout horizontalLayout = new HorizontalLayout();
     horizontalLayout.add(label, logoutButton);

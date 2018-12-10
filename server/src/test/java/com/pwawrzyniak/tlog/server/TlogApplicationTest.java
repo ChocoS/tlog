@@ -1,7 +1,9 @@
 package com.pwawrzyniak.tlog.server;
 
 import com.pwawrzyniak.tlog.backend.dto.BillDto;
+import com.pwawrzyniak.tlog.backend.entity.User;
 import com.pwawrzyniak.tlog.backend.service.BillService;
+import com.pwawrzyniak.tlog.backend.service.security.UserAwareUserDetails;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,7 +35,9 @@ public class TlogApplicationTest {
   @BeforeClass
   public static void setupClass() {
     Authentication authentication = Mockito.mock(Authentication.class);
-    Mockito.when(authentication.getName()).thenReturn("user");
+    User user = new User();
+    user.setUsername("user");
+    Mockito.when(authentication.getPrincipal()).thenReturn(new UserAwareUserDetails(user));
     SecurityContext securityContext = Mockito.mock(SecurityContext.class);
     Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
     SecurityContextHolder.setContext(securityContext);
@@ -44,7 +48,7 @@ public class TlogApplicationTest {
     LocalDate now = LocalDate.now();
 
     // find all bills and check size
-    List<BillDto> billDtoList = billService.findAllBills();
+    List<BillDto> billDtoList = billService.findAllNotDeletedBills();
     assertEquals(8, billDtoList.size());
     assertTrue(billDtoList.get(0).getDate().isBefore(now));
 
@@ -57,11 +61,19 @@ public class TlogApplicationTest {
     billService.saveBill(billDto);
 
     // find all bills again and check new size
-    billDtoList = billService.findAllBills();
+    billDtoList = billService.findAllNotDeletedBills();
     assertEquals(9, billDtoList.size());
     assertTrue(billDtoList.get(0).getDate().equals(now));
 
     // check who created bills
     billDtoList.forEach(bill -> assertEquals("user", bill.getCreatedBy()));
+
+    // soft delete two bills
+    billService.softDeleteBill(billDtoList.get(0));
+    billService.softDeleteBill(billDtoList.get(1));
+
+    // find all bills again and check new size
+    billDtoList = billService.findAllNotDeletedBills();
+    assertEquals(7, billDtoList.size());
   }
 }

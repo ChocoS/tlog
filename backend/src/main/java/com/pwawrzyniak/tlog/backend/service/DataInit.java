@@ -47,7 +47,7 @@ public class DataInit implements ApplicationRunner {
   }
 
   private void initializeBills() {
-    long count = billService.findAllBills().size();
+    long count = billService.findAllNotDeletedBills().size();
     if (count == 0) {
       log.info("Database empty. Creating test repository...");
 

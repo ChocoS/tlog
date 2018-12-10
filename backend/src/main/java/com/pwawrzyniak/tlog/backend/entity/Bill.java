@@ -25,11 +25,12 @@ import java.util.List;
 public class Bill extends AuditModel {
 
   @Builder
-  public Bill(LocalDateTime createdAt, String createdBy, LocalDateTime lastModifiedAt, String lastModifiedBy, Long id, LocalDate date, List<BillItem> billItems) {
+  public Bill(LocalDateTime createdAt, String createdBy, LocalDateTime lastModifiedAt, String lastModifiedBy, Long id, LocalDate date, List<BillItem> billItems, boolean deleted) {
     super(createdAt, createdBy, lastModifiedAt, lastModifiedBy);
     this.id = id;
     this.date = date;
     this.billItems = billItems;
+    this.deleted = deleted;
   }
 
   @Id
@@ -42,4 +43,6 @@ public class Bill extends AuditModel {
 
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "bill")
   private List<BillItem> billItems;
+
+  private boolean deleted;
 }

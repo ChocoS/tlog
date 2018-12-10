@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static com.pwawrzyniak.tlog.web.vaadin.events.Event.Type.SAVE_BILL;
 import static com.vaadin.flow.component.notification.Notification.Position.TOP_CENTER;
 
 @SpringComponent
@@ -111,7 +112,7 @@ public class BillEditorView extends VerticalLayout {
   }
 
   private void fireSaveNewBillEvent() {
-    Broadcaster.broadcast(new Event());
+    Broadcaster.broadcast(new Event(SAVE_BILL));
   }
 
   private void showConfirmation(BillDto billDto) {

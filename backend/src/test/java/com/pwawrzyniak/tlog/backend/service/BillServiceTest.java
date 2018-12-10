@@ -12,9 +12,12 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import javax.validation.Validation;
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static com.pwawrzyniak.tlog.backend.service.DataInit.bill;
 import static com.pwawrzyniak.tlog.backend.service.DataInit.billItem;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -65,5 +68,45 @@ public class BillServiceTest {
 
     // then
     verifyZeroInteractions(billRepository);
+  }
+
+  @Test
+  public void shouldSoftDeleteExistingBill() {
+    // given
+    Long billId = 1L;
+    Bill bill = Bill.builder().deleted(false).build();
+    when(billRepository.findById(billId)).thenReturn(Optional.of(bill));
+
+    // when
+    boolean result = billService.softDeleteBill(BillDto.builder().id(billId).build());
+
+    // then
+    Mockito.verify(billRepository, times(1)).findById(billId);
+    assertTrue(result);
+    assertTrue(bill.isDeleted());
+  }
+
+  @Test
+  public void shouldNotSoftDeleteNonExistingBill() {
+    // given
+    Long billId = 1L;
+    when(billRepository.findById(billId)).thenReturn(Optional.empty());
+
+    // when
+    boolean result = billService.softDeleteBill(BillDto.builder().id(billId).build());
+
+    // then
+    Mockito.verify(billRepository, times(1)).findById(billId);
+    assertFalse(result);
+  }
+
+  @Test
+  public void shouldNotSoftDeleteIfIdIsNull() {
+    // when
+    boolean result = billService.softDeleteBill(new BillDto());
+
+    // then
+    verifyZeroInteractions(billRepository);
+    assertFalse(result);
   }
 }

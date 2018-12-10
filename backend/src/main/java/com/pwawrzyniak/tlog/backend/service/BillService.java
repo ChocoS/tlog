@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -33,8 +34,8 @@ public class BillService {
   private DtoToEntityConverter dtoToEntityConverter;
 
   @Transactional
-  public List<BillDto> findAllBills() {
-    List<BillDto> billDtoList = billRepository.findAllByOrderByDateDesc().stream().map(entityToDtoConverter::convertBill).collect(Collectors.toList());
+  public List<BillDto> findAllNotDeletedBills() {
+    List<BillDto> billDtoList = billRepository.findByDeletedOrderByDateDesc(false).stream().map(entityToDtoConverter::convertBill).collect(Collectors.toList());
     log.info("Found {} bills", billDtoList.size());
     return billDtoList;
   }
@@ -45,6 +46,19 @@ public class BillService {
       Bill bill = billRepository.save(dtoToEntityConverter.convertBillDto(billDto));
       log.info("New bill saved with id {}: {}", bill.getId(), billDto);
       return true;
+    }
+    return false;
+  }
+
+  @Transactional
+  public boolean softDeleteBill(BillDto billDto) {
+    if (billDto != null && billDto.getId() != null) {
+      Optional<Bill> optionalBill = billRepository.findById(billDto.getId());
+      if (optionalBill.isPresent()) {
+        Bill bill = optionalBill.get();
+        bill.setDeleted(true);
+        return true;
+      }
     }
     return false;
   }

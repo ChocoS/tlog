@@ -43,14 +43,12 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
   @Override
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-    User user = userRepository.findByUsername(username);
+    User user = userRepository.findOneByUsername(username);
     if (user == null) {
       throw new UsernameNotFoundException("User with username '" + username + "' was not found");
     }
 
-    return new org.springframework.security.core.userdetails.User(
-        user.getUsername(), user.getPassword(), user.isEnabled(), true, true,
-        true, getAuthorities(user.getRoles()));
+    return new UserAwareUserDetails(user, getAuthorities(user.getRoles()));
   }
 
   public User registerNewUserAccount(String username, String password, String firstName, String lastName, String... roles) {
@@ -70,10 +68,14 @@ public class UserDetailsServiceImpl implements UserDetailsService {
   }
 
   public UserDto getLoggedInUser() {
-    String loggedInUsername = findLoggedInUsername();
-    if (loggedInUsername != null) {
-      User loggedInUser = userRepository.findByUsername(loggedInUsername);
-      return UserDto.builder().firstName(loggedInUser.getFirstName()).lastName(loggedInUser.getLastName()).username(loggedInUsername).build();
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication != null) {
+      UserAwareUserDetails userAwareUserDetails = (UserAwareUserDetails) authentication.getPrincipal();
+      if (userAwareUserDetails != null) {
+        return UserDto.builder().firstName(userAwareUserDetails.getUser().getFirstName())
+            .lastName(userAwareUserDetails.getUser().getLastName())
+            .username(userAwareUserDetails.getUsername()).build();
+      }
     }
 
     return UserDto.builder().firstName("anonymous").lastName("anonymous").username("anonymous").build();
@@ -127,15 +129,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
   }
 
   private boolean userExists(String email) {
-    return userRepository.findByUsername(email) != null;
-  }
-
-  private String findLoggedInUsername() {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    if (authentication != null) {
-      return authentication.getName();
-    }
-
-    return null;
+    return userRepository.findOneByUsername(email) != null;
   }
 }
