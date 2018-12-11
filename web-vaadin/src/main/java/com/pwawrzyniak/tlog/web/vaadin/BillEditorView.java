@@ -14,8 +14,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.validation.ConstraintViolation;
@@ -35,8 +33,6 @@ import static com.vaadin.flow.component.notification.Notification.Position.TOP_C
 @SpringComponent
 @UIScope
 public class BillEditorView extends VerticalLayout {
-
-  private static Logger log = LoggerFactory.getLogger(BillEditorView.class);
 
   private static final int DEFAULT_NUMBER_OF_BILL_ITEMS = 3;
   private static final int MAX_NUMBER_OF_BILL_ITEMS = 10;
