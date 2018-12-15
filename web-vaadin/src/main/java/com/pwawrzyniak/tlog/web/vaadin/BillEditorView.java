@@ -40,8 +40,12 @@ public class BillEditorView extends VerticalLayout {
   private List<String> tags;
   private List<BillItemEditorView> billItemEditorViews = new ArrayList<>();
   private TextField totalValueTextField = new TextField("Total");
+  private DatePicker billDate = new DatePicker("Date");
+  private Button editCancelButton = new Button("Cancel edit");
 
   private TagService tagService;
+
+  private BillDto editedBill;
 
   public BillEditorView(@Autowired BillService billService, @Autowired TagService tagService) {
     this.tagService = tagService;
@@ -49,7 +53,6 @@ public class BillEditorView extends VerticalLayout {
 
     IntStream.range(0, DEFAULT_NUMBER_OF_BILL_ITEMS).forEach(i -> billItemEditorViews.add(new BillItemEditorView(tags, this)));
 
-    DatePicker billDate = new DatePicker("Date");
     billDate.setMax(LocalDate.now());
 
     totalValueTextField.setValue("0");
@@ -73,6 +76,7 @@ public class BillEditorView extends VerticalLayout {
     });
     Button saveBillButton = new Button("Save bill", event -> {
       BillDto billDto = BillDto.builder().date(billDate.getValue())
+          .id(editedBill != null ? editedBill.getId() : null)
           .billItems(billItemEditorViews.stream().map(BillItemEditorView::readBillItemDto)
               .filter(Objects::nonNull).collect(Collectors.toList()))
           .build();
@@ -93,11 +97,16 @@ public class BillEditorView extends VerticalLayout {
         showMessage(messageLines);
       }
     });
+    editCancelButton.addClickListener(clicked -> {
+      editedBill = null;
+      clearBillForms();
+    });
+    editCancelButton.setVisible(false);
 
     HorizontalLayout horizontalLayout = new HorizontalLayout();
     horizontalLayout.setPadding(false);
     horizontalLayout.setAlignItems(Alignment.END);
-    horizontalLayout.add(billDate, totalValueTextField, addBillItemButton, removeBillItemButton, saveBillButton);
+    horizontalLayout.add(billDate, totalValueTextField, addBillItemButton, removeBillItemButton, saveBillButton, editCancelButton);
 
     add(horizontalLayout);
     billItemEditorViews.forEach(this::add);
@@ -134,6 +143,7 @@ public class BillEditorView extends VerticalLayout {
     IntStream.range(0, DEFAULT_NUMBER_OF_BILL_ITEMS).forEach(i -> billItemEditorViews.add(new BillItemEditorView(tags, this)));
     billItemEditorViews.forEach(this::add);
     totalValueTextField.setValue("0");
+    editCancelButton.setVisible(false);
   }
 
   public void recalculateTotal() {
@@ -142,5 +152,24 @@ public class BillEditorView extends VerticalLayout {
         .map(BigDecimal::new)
         .reduce(BigDecimal.ZERO, BigDecimal::add);
     totalValueTextField.setValue(total.toPlainString());
+  }
+
+  public void edit(BillDto billDto) {
+    editCancelButton.setVisible(true);
+    editedBill = billDto;
+    displayEditedBill();
+  }
+
+  private void displayEditedBill() {
+    billDate.setValue(editedBill.getDate());
+    billItemEditorViews.forEach(this::remove);
+    billItemEditorViews.clear();
+    IntStream.range(0, editedBill.getBillItems().size()).forEach(i -> {
+      BillItemEditorView billItemEditorView = new BillItemEditorView(tags, this);
+      billItemEditorViews.add(billItemEditorView);
+      billItemEditorView.display(editedBill.getBillItems().get(i));
+    });
+    billItemEditorViews.forEach(this::add);
+    recalculateTotal();
   }
 }

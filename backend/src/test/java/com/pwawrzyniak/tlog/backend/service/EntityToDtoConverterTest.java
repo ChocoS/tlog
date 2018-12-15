@@ -33,8 +33,8 @@ public class EntityToDtoConverterTest {
     assertEquals(LocalDate.of(2018, 10, 22), billDto.getDate());
     assertEquals(LocalDateTime.of(2018, 10, 23, 10, 34), billDto.getCreatedAt());
     assertEquals("user1", billDto.getCreatedBy());
-    assertEquals(LocalDateTime.of(2018, 10, 24, 23, 11), billDto.getLastModifiedAt());
-    assertEquals("user2", billDto.getLastModifiedBy());
+    assertEquals(LocalDateTime.of(2018, 10, 24, 23, 12), billDto.getLastModifiedAt());
+    assertEquals("user3", billDto.getLastModifiedBy());
     assertEquals("135.33", billDto.getTotalCost());
     assertNotNull(billDto.getBillItems());
     assertEquals(2, billDto.getBillItems().size());
@@ -61,12 +61,18 @@ public class EntityToDtoConverterTest {
                 .description("chemia")
                 .tags(Set.of(Tag.builder().name("maintenance").build()))
                 .expression("9.99+2.35")
+                .createdAt(LocalDateTime.of(2018, 10, 23, 10, 34))
+                .createdBy("user1")
                 .build(),
             BillItem.builder()
                 .id(22L)
                 .cost(new BigDecimal("122.99"))
                 .tags(Set.of(Tag.builder().name("piotr").build(), Tag.builder().name("clothes").build()))
                 .expression("122.99")
+                .createdAt(LocalDateTime.of(2018, 10, 23, 10, 34))
+                .createdBy("user1")
+                .lastModifiedAt(LocalDateTime.of(2018, 10, 24, 23, 12))
+                .lastModifiedBy("user3")
                 .build()
         ))
         .build();

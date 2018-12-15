@@ -1,9 +1,10 @@
 package com.pwawrzyniak.tlog.web.vaadin;
 
 import com.pwawrzyniak.tlog.backend.dto.BillItemDto;
+import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -25,16 +26,14 @@ import static com.pwawrzyniak.tlog.backend.validation.ValidationConstants.MAX_TA
 
 public class BillItemEditorView extends VerticalLayout {
 
-  private BillEditorView billEditorView;
   private Set<String> selectedTags = new HashSet<>();
   private TextField descriptionTextField = new TextField("Description");
   private TextField costTextField = new TextField("Cost");
   private TextField expressionTextField = new TextField("Expression");
+  private ComboBox<String> tagsComboBox;
 
   public BillItemEditorView(List<String> tags, BillEditorView billEditorView) {
-    this.billEditorView = billEditorView;
-    FormLayout selectedTagsComponent = new FormLayout();
-    selectedTagsComponent.setWidth("100%");
+    Div selectedTagsComponent = new Div();
 
     expressionTextField.addValueChangeListener(event -> {
       String value = event.getValue();
@@ -62,7 +61,7 @@ public class BillItemEditorView extends VerticalLayout {
     descriptionTextField.setMaxLength(MAX_DESCRIPTION_SIZE);
     descriptionTextField.setErrorMessage("Description is too long");
 
-    ComboBox<String> tagsComboBox = createTagsComboBox(tags, selectedTagsComponent);
+    tagsComboBox = createTagsComboBox(tags, selectedTagsComponent);
     tagsComboBox.setLabel("Tags");
 
     HorizontalLayout horizontalLayout = new HorizontalLayout();
@@ -104,7 +103,7 @@ public class BillItemEditorView extends VerticalLayout {
     return costTextField.getValue();
   }
 
-  private ComboBox<String> createTagsComboBox(List<String> tags, FormLayout selectedTagsComponent) {
+  private ComboBox<String> createTagsComboBox(List<String> tags, HasComponents selectedTagsComponent) {
     ComboBox<String> tagsComboBox = new ComboBox<>();
 
     tagsComboBox.setItems(tags);
@@ -116,14 +115,8 @@ public class BillItemEditorView extends VerticalLayout {
       if (value.length() > MAX_TAG_SIZE) {
         tagsComboBox.setInvalid(true);
       } else if (!selectedTags.contains(value)) {
-        Button tagButton = new Button(value, new Icon(VaadinIcon.CLOSE_SMALL));
-        tagButton.setIconAfterText(true);
-        tagButton.addClickListener(clicked -> {
-          selectedTagsComponent.remove(tagButton);
-          selectedTags.remove(value);
-        });
-        selectedTagsComponent.add(tagButton);
-        selectedTags.add(value);
+        tagsComboBox.setInvalid(false);
+        addButton(selectedTagsComponent, value);
       }
     });
     tagsComboBox.addValueChangeListener(event -> {
@@ -133,16 +126,27 @@ public class BillItemEditorView extends VerticalLayout {
       }
       String value = event.getValue().toLowerCase();
       if (!selectedTags.contains(value)) {
-        Button tagButton = new Button(value, new Icon(VaadinIcon.CLOSE_SMALL));
-        tagButton.setIconAfterText(true);
-        tagButton.addClickListener(clicked -> {
-          selectedTagsComponent.remove(tagButton);
-          selectedTags.remove(value);
-        });
-        selectedTagsComponent.add(tagButton);
-        selectedTags.add(value);
+        addButton(selectedTagsComponent, value);
       }
     });
     return tagsComboBox;
+  }
+
+  private void addButton(HasComponents selectedTagsComponent, String value) {
+    Button tagButton = new Button(value, new Icon(VaadinIcon.CLOSE_SMALL));
+    tagButton.setIconAfterText(true);
+    tagButton.addClickListener(clicked -> {
+      selectedTagsComponent.remove(tagButton);
+      selectedTags.remove(value);
+    });
+    tagButton.getStyle().set("margin-right", "5px");
+    selectedTagsComponent.add(tagButton);
+    selectedTags.add(value);
+  }
+
+  public void display(BillItemDto billItemDto) {
+    expressionTextField.setValue(billItemDto.getExpression());
+    billItemDto.getTags().forEach(tag -> tagsComboBox.setValue(tag));
+    descriptionTextField.setValue(billItemDto.getDescription() != null ? billItemDto.getDescription() : "");
   }
 }

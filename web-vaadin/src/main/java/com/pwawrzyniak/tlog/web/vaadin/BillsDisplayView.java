@@ -11,7 +11,10 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.LocalDateRenderer;
@@ -41,10 +44,12 @@ public class BillsDisplayView extends VerticalLayout { // wrapping layout is nee
 
   private Grid<BillDto> billsGrid;
   private BillService billService;
+  private BillEditorView billEditorView;
   private Registration broadcasterRegistration;
 
-  public BillsDisplayView(@Autowired BillService billService) {
+  public BillsDisplayView(@Autowired BillService billService, @Autowired BillEditorView billEditorView) {
     this.billService = billService;
+    this.billEditorView = billEditorView;
     List<BillDto> bills = billService.findAllNotDeletedBills();
 
     billsGrid = new Grid<>();
@@ -54,7 +59,7 @@ public class BillsDisplayView extends VerticalLayout { // wrapping layout is nee
     billsGrid.addColumn(BillDto::getTotalCost).setHeader("Cost").setFlexGrow(0).setWidth("100px");
     billsGrid.addColumn(new ComponentRenderer<>(this::billItemDisplayComponent)).setHeader("Bill items").setFlexGrow(0).setWidth("600px");
     billsGrid.addColumn(new ComponentRenderer<>(this::auditDisplayComponent)).setHeader("Audit").setFlexGrow(0).setWidth("400px");
-    billsGrid.addColumn(new ComponentRenderer<>(this::operationsComponent)).setHeader("Operations").setFlexGrow(0).setWidth("100px");
+    billsGrid.addColumn(new ComponentRenderer<>(this::operationsComponent)).setHeader("Operations").setFlexGrow(0).setWidth("150px");
     billsGrid.getStyle().set("border", "1px solid gray");
     billsGrid.setSelectionMode(Grid.SelectionMode.NONE);
 
@@ -113,11 +118,20 @@ public class BillsDisplayView extends VerticalLayout { // wrapping layout is nee
   }
 
   private Component operationsComponent(BillDto billDto) {
-    return new Button("Delete", clicked -> {
+    HorizontalLayout horizontalLayout = new HorizontalLayout();
+    horizontalLayout.setPadding(false);
+
+    Button deleteButton = new Button(new Icon(VaadinIcon.FILE_REMOVE), clicked -> {
       billService.softDeleteBill(billDto);
       showDeleteConfirmation(billDto);
       fireDeleteBillEvent();
     });
+    Button editButton = new Button(new Icon(VaadinIcon.EDIT), clicked -> {
+      billEditorView.edit(billDto);
+    });
+
+    horizontalLayout.add(editButton, deleteButton);
+    return horizontalLayout;
   }
 
   private void fireDeleteBillEvent() {
