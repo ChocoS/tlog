@@ -43,7 +43,7 @@ public class DataInit implements ApplicationRunner {
     userDetailsService.createRoleIfNotFound("ROLE_USER", Arrays.asList(readPrivilege));
 
     userDetailsService.registerNewUserAccount("admin", "admin", "adminName", "adminLastName", "ROLE_ADMIN");
-    userDetailsService.registerNewUserAccount("user", "user", "userName", "userLastName", "ROLE_USER");
+    userDetailsService.registerNewUserAccount("chocos", "123qwe", "chocos", "", "ROLE_USER");
   }
 
   private void initializeBills() {

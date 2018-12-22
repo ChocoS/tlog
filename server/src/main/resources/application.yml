@@ -1,10 +1,6 @@
 server:
   port: 8080
 
-tlog:
-  database:
-    name: ~/tlogdb
-
 spring:
   h2:
     console:
@@ -12,8 +8,8 @@ spring:
   datasource:
     url: jdbc:h2:${tlog.database.name};DB_CLOSE_ON_EXIT=FALSE;AUTO_RECONNECT=TRUE
     driverClassName: org.h2.Driver
-    username: sa
-    password:
+    username: ${tlog.database.username}
+    password: ${tlog.database.password}
   jpa:
     show-sql: true
     hibernate:
