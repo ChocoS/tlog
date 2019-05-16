@@ -3,3 +3,4 @@ tlog:
     name: mem:tlogdb
     username: sa
     password:
+  food-tag: food

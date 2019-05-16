@@ -1,8 +1,10 @@
 package com.pwawrzyniak.tlog.web.vaadin;
 
 import com.pwawrzyniak.tlog.backend.dto.BillDto;
+import com.pwawrzyniak.tlog.backend.dto.BillItemDto;
 import com.pwawrzyniak.tlog.backend.service.BillService;
 import com.pwawrzyniak.tlog.backend.service.TagService;
+import com.pwawrzyniak.tlog.backend.validation.ExpressionEvaluator;
 import com.pwawrzyniak.tlog.web.vaadin.events.Broadcaster;
 import com.pwawrzyniak.tlog.web.vaadin.events.Event;
 import com.vaadin.flow.component.button.Button;
@@ -15,6 +17,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.validation.ConstraintViolation;
 import java.math.BigDecimal;
@@ -27,6 +30,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static com.pwawrzyniak.tlog.backend.validation.ExpressionEvaluator.isValid;
+import static com.pwawrzyniak.tlog.backend.validation.ExpressionNormalizer.isNormalized;
+import static com.pwawrzyniak.tlog.backend.validation.ExpressionNormalizer.normalize;
+import static com.pwawrzyniak.tlog.backend.validation.ValidationConstants.EXPRESSION_PATTERN;
+import static com.pwawrzyniak.tlog.backend.validation.ValidationConstants.MAX_EXPRESSION_SIZE;
 import static com.pwawrzyniak.tlog.web.vaadin.events.Event.Type.SAVE_BILL;
 import static com.vaadin.flow.component.notification.Notification.Position.TOP_CENTER;
 
@@ -42,10 +50,14 @@ public class BillEditorView extends VerticalLayout {
   private TextField totalValueTextField = new TextField("Total");
   private DatePicker billDate = new DatePicker("Date");
   private Button editCancelButton = new Button("Cancel edit");
+  private TextField fastFoodExpressionTextField = new TextField("Fast food expression");
 
   private TagService tagService;
 
   private BillDto editedBill;
+
+  @Value("${tlog.food-tag}")
+  private String foodTag;
 
   public BillEditorView(@Autowired BillService billService, @Autowired TagService tagService) {
     this.tagService = tagService;
@@ -75,11 +87,21 @@ public class BillEditorView extends VerticalLayout {
       }
     });
     Button saveBillButton = new Button("Save bill", event -> {
-      BillDto billDto = BillDto.builder().date(billDate.getValue())
-          .id(editedBill != null ? editedBill.getId() : null)
-          .billItems(billItemEditorViews.stream().map(BillItemEditorView::readBillItemDto)
-              .filter(Objects::nonNull).collect(Collectors.toList()))
-          .build();
+      BillDto.BillDtoBuilder billBuilder = BillDto.builder().date(billDate.getValue())
+          .id(editedBill != null ? editedBill.getId() : null);
+
+      if (fastFoodExpressionTextField.getValue() != null && fastFoodExpressionTextField.getValue().length() > 0) {
+        billBuilder.billItems(Collections.singletonList(BillItemDto.builder()
+            .cost(ExpressionEvaluator.evaluate(fastFoodExpressionTextField.getValue()).toPlainString())
+            .expression(fastFoodExpressionTextField.getValue())
+            .tags(Collections.singleton(foodTag))
+            .build()));
+      } else {
+        billBuilder.billItems(billItemEditorViews.stream().map(BillItemEditorView::readBillItemDto)
+            .filter(Objects::nonNull).collect(Collectors.toList()));
+      }
+
+      BillDto billDto = billBuilder.build();
       Set<ConstraintViolation<BillDto>> constraintViolations = billService.validate(billDto);
       if (constraintViolations.isEmpty()) {
         billService.saveBill(billDto);
@@ -103,10 +125,26 @@ public class BillEditorView extends VerticalLayout {
     });
     editCancelButton.setVisible(false);
 
+    fastFoodExpressionTextField.addValueChangeListener(event -> {
+      String value = event.getValue();
+      if (!isNormalized(value)) {
+        value = normalize(value);
+        fastFoodExpressionTextField.setValue(value);
+      }
+    });
+    fastFoodExpressionTextField.addFocusListener(event -> fastFoodExpressionTextField.setInvalid(false));
+    fastFoodExpressionTextField.addBlurListener(event ->
+        fastFoodExpressionTextField.setInvalid(!isValid(fastFoodExpressionTextField.getValue())));
+    fastFoodExpressionTextField.setPattern(EXPRESSION_PATTERN);
+    fastFoodExpressionTextField.setPreventInvalidInput(true);
+    fastFoodExpressionTextField.setErrorMessage("");
+    fastFoodExpressionTextField.setMaxLength(MAX_EXPRESSION_SIZE);
+
     HorizontalLayout horizontalLayout = new HorizontalLayout();
     horizontalLayout.setPadding(false);
     horizontalLayout.setAlignItems(Alignment.END);
-    horizontalLayout.add(billDate, totalValueTextField, addBillItemButton, removeBillItemButton, saveBillButton, editCancelButton);
+    horizontalLayout.add(billDate, totalValueTextField, addBillItemButton, removeBillItemButton, saveBillButton,
+        editCancelButton, fastFoodExpressionTextField);
 
     add(horizontalLayout);
     billItemEditorViews.forEach(this::add);
@@ -144,6 +182,7 @@ public class BillEditorView extends VerticalLayout {
     billItemEditorViews.forEach(this::add);
     totalValueTextField.setValue("0");
     editCancelButton.setVisible(false);
+    fastFoodExpressionTextField.clear();
   }
 
   public void recalculateTotal() {
