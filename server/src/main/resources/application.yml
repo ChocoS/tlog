@@ -11,7 +11,7 @@ spring:
     username: ${tlog.database.username}
     password: ${tlog.database.password}
   jpa:
-    show-sql: true
+    show-sql: false
     hibernate:
       ddl-auto: update
     properties:

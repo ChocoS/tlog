@@ -52,7 +52,7 @@ public class TlogApplicationTest {
     LocalDate now = LocalDate.now();
 
     log.info("find all bills and check size");
-    List<BillDto> billDtoList = billService.findAllNotDeletedBills();
+    List<BillDto> billDtoList = billService.findNotDeletedBillsFirstPage();
     assertEquals(8, billDtoList.size());
     assertTrue(billDtoList.get(0).getDate().isBefore(now));
 
@@ -65,7 +65,7 @@ public class TlogApplicationTest {
     billService.saveBill(billDto);
 
     log.info("find all bills again and check new size");
-    billDtoList = billService.findAllNotDeletedBills();
+    billDtoList = billService.findNotDeletedBillsFirstPage();
     assertEquals(9, billDtoList.size());
     assertTrue(billDtoList.get(0).getDate().equals(now));
 
@@ -77,7 +77,7 @@ public class TlogApplicationTest {
     billService.softDeleteBill(billDtoList.get(1));
 
     log.info("find all bills again and check new size");
-    billDtoList = billService.findAllNotDeletedBills();
+    billDtoList = billService.findNotDeletedBillsFirstPage();
     assertEquals(7, billDtoList.size());
 
     log.info("edit bill");
@@ -86,7 +86,7 @@ public class TlogApplicationTest {
     int currentNumberOfBillItems = billToBeEdited.getBillItems().size();
     billToBeEdited.getBillItems().add(billItem("1", "1", "added", "added tag"));
     billService.saveBill(billToBeEdited);
-    billDtoList = billService.findAllNotDeletedBills();
+    billDtoList = billService.findNotDeletedBillsFirstPage();
     BillDto editedBill = billDtoList.get(billDtoList.size() - 1);
     assertEquals(editedBillId, editedBill.getId());
     assertEquals(currentNumberOfBillItems + 1, editedBill.getBillItems().size());

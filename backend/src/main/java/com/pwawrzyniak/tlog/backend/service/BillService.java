@@ -7,6 +7,9 @@ import com.pwawrzyniak.tlog.backend.repository.BillRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +19,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static com.pwawrzyniak.tlog.backend.repository.BillSpecifications.freeTextSearch;
+import static com.pwawrzyniak.tlog.backend.repository.BillSpecifications.notDeleted;
 
 @Service
 public class BillService {
@@ -35,10 +41,32 @@ public class BillService {
   private DtoToEntityConverter dtoToEntityConverter;
 
   @Transactional
-  public List<BillDto> findAllNotDeletedBills() {
-    List<BillDto> billDtoList = billRepository.findByDeletedOrderByDateDesc(false).stream().map(entityToDtoConverter::convertBill).collect(Collectors.toList());
-    log.info("Found {} bills", billDtoList.size());
+  public List<BillDto> findAllNotDeletedBySearchString(int offset, int count, String searchString) {
+    int pageSize = calculatePageSize(offset, count);
+    int pageNumber = offset / pageSize;
+    int subListFrom = offset - pageNumber * pageSize;
+    int subListTo = subListFrom + count;
+    Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by("date").descending());
+
+    List<Bill> bills = billRepository.findAll(notDeleted().and(freeTextSearch(searchString)), pageable).getContent();
+    log.info("Offset {}, count {}, pageSize {}, pageNumber {}, subListFrom {}, subListTo {}, billsSize {}", offset, count, pageSize, pageNumber, subListFrom, subListTo, bills.size());
+    bills = bills.subList(subListFrom, subListTo > bills.size() ? bills.size() : subListTo);
+    List<BillDto> billDtoList = bills.stream().map(entityToDtoConverter::convertBill).collect(Collectors.toList());
+    log.info("Found {} bills with search string {}", billDtoList.size(), searchString);
     return billDtoList;
+  }
+
+  @Transactional
+  public List<BillDto> findNotDeletedBillsFirstPage() {
+    return findAllNotDeletedBySearchString(0, 50, null);
+  }
+
+  private int calculatePageSize(int offset, int count) {
+    int pageSize = count;
+    while (((offset / pageSize) + 1) * pageSize < offset + count) {
+      pageSize++;
+    }
+    return pageSize;
   }
 
   @Transactional

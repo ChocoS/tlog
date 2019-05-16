@@ -1,5 +1,5 @@
 ext {
-    vaadinVersion = "12.0.0"
+    vaadinVersion = "13.0.5"
 }
 
 dependencies {

@@ -5,9 +5,24 @@ dependencies {
     compile "org.springframework.boot:spring-boot-starter-security"
     compile "org.springframework.boot:spring-boot-starter-tomcat"
     compileOnly "org.projectlombok:lombok"
+    compileOnly "org.hibernate:hibernate-jpamodelgen"
     runtimeOnly "com.h2database:h2"
     runtimeOnly "javax.xml.bind:jaxb-api"
     runtimeOnly "org.javassist:javassist:3.23.1-GA"
     testCompile "org.mockito:mockito-core"
     testCompile "junit:junit"
+}
+
+// Add source set to define where the generated source code should go to
+sourceSets.configureEach { sourceSet ->
+    tasks.named(sourceSet.compileJavaTaskName).configure {
+        options.annotationProcessorGeneratedSourcesDirectory = file("$buildDir/generated/sources/java")
+    }
+}
+
+idea {
+    module {
+        sourceDirs += file("$buildDir/generated/sources/java")
+        generatedSourceDirs += file("$buildDir/generated/sources/java")
+    }
 }

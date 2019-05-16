@@ -7,38 +7,37 @@ import com.pwawrzyniak.tlog.web.vaadin.events.Event;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.DetachEvent;
+import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.provider.ConfigurableFilterDataProvider;
+import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.LocalDateRenderer;
 import com.vaadin.flow.shared.Registration;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
-import java.util.List;
 
 import static com.pwawrzyniak.tlog.web.vaadin.events.Event.Type.DELETE_BILL;
 import static com.vaadin.flow.component.notification.Notification.Position.TOP_CENTER;
-import static java.time.format.DateTimeFormatter.ofLocalizedDate;
 
 @SpringComponent
 @UIScope
 public class BillsDisplayView extends VerticalLayout { // wrapping layout is needed to mitigate grid height issue
 
-  private static Logger log = LoggerFactory.getLogger(BillsDisplayView.class);
   private static final String BILL_ITEMS_DIV_ID_PREFIX = "tlog_bill_items_";
   private static final String BILL_AUDIT_DIV_ID_PREFIX = "tlog_bill_audit_";
 
@@ -46,15 +45,21 @@ public class BillsDisplayView extends VerticalLayout { // wrapping layout is nee
   private BillService billService;
   private BillEditorView billEditorView;
   private Registration broadcasterRegistration;
+  private TextField filterTextField;
+  private ConfigurableFilterDataProvider<BillDto, Void, String> configurableFilterDataProvider;
 
   public BillsDisplayView(@Autowired BillService billService, @Autowired BillEditorView billEditorView) {
     this.billService = billService;
     this.billEditorView = billEditorView;
-    List<BillDto> bills = billService.findAllNotDeletedBills();
+
+    configurableFilterDataProvider = billsGridDataProvider(billService);
+
+    filterTextField = new TextField("Filter");
+    filterTextField.addKeyPressListener(Key.ENTER, event -> refreshFilters());
 
     billsGrid = new Grid<>();
-    billsGrid.setItems(bills);
-    billsGrid.addColumn(new LocalDateRenderer<>(BillDto::getDate, ofLocalizedDate(FormatStyle.SHORT)))
+    billsGrid.setDataProvider(configurableFilterDataProvider);
+    billsGrid.addColumn(new LocalDateRenderer<>(BillDto::getDate, DateTimeFormatter.ISO_DATE))
         .setHeader("Date").setFlexGrow(0).setWidth("100px");
     billsGrid.addColumn(BillDto::getTotalCost).setHeader("Cost").setFlexGrow(0).setWidth("100px");
     billsGrid.addColumn(new ComponentRenderer<>(this::billItemDisplayComponent)).setHeader("Bill items").setFlexGrow(0).setWidth("600px");
@@ -62,7 +67,13 @@ public class BillsDisplayView extends VerticalLayout { // wrapping layout is nee
     billsGrid.addColumn(new ComponentRenderer<>(this::operationsComponent)).setHeader("Operations").setFlexGrow(0).setWidth("150px");
     billsGrid.getStyle().set("border", "1px solid gray");
     billsGrid.setSelectionMode(Grid.SelectionMode.NONE);
+    billsGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COMPACT);
 
+    HorizontalLayout horizontalLayout = new HorizontalLayout(filterTextField);
+    horizontalLayout.setPadding(false);
+    horizontalLayout.setAlignItems(Alignment.END);
+
+    add(horizontalLayout);
     add(billsGrid);
 
     setHeight("500px");
@@ -70,11 +81,25 @@ public class BillsDisplayView extends VerticalLayout { // wrapping layout is nee
     setSpacing(false);
   }
 
+  private void refreshFilters() {
+    configurableFilterDataProvider.setFilter(filterTextField.getValue());
+    refreshData();
+  }
+
+  private ConfigurableFilterDataProvider<BillDto, Void, String> billsGridDataProvider(@Autowired BillService billService) {
+    DataProvider<BillDto, String> dataProvider = DataProvider.fromFilteringCallbacks(
+        query -> billService.findAllNotDeletedBySearchString(query.getOffset(), query.getLimit(), query.getFilter().orElse(null)).stream(),
+        query -> billService.findAllNotDeletedBySearchString(query.getOffset(), query.getLimit(), query.getFilter().orElse(null)).size()
+    );
+
+    return dataProvider.withConfigurableFilter();
+  }
+
   @Override
   protected void onAttach(AttachEvent attachEvent) {
     UI ui = attachEvent.getUI();
     broadcasterRegistration = Broadcaster.register(myEvent -> {
-      ui.access(this::refresh);
+      ui.access(this::refreshData);
     });
   }
 
@@ -84,9 +109,7 @@ public class BillsDisplayView extends VerticalLayout { // wrapping layout is nee
     broadcasterRegistration = null;
   }
 
-  public void refresh() {
-    List<BillDto> bills = billService.findAllNotDeletedBills();
-    billsGrid.setItems(bills);
+  public void refreshData() {
     billsGrid.getDataProvider().refreshAll();
   }
 

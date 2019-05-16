@@ -1,0 +1,5 @@
+tlog:
+  database:
+    name: mem:tlogdb
+    username: sa
+    password:
