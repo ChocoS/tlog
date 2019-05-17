@@ -110,18 +110,10 @@ public class BillService {
   }
 
   private void updateBillItem(BillItem editedBillItem, BillItem billItemToBeUpdated) {
-    if (!billItemToBeUpdated.getCost().equals(editedBillItem.getCost())) {
-      billItemToBeUpdated.setCost(editedBillItem.getCost());
-    }
-    if (!billItemToBeUpdated.getDescription().equals(editedBillItem.getDescription())) {
-      billItemToBeUpdated.setDescription(editedBillItem.getDescription());
-    }
-    if (!billItemToBeUpdated.getExpression().equals(editedBillItem.getExpression())) {
-      billItemToBeUpdated.setExpression(editedBillItem.getExpression());
-    }
-    if (!billItemToBeUpdated.getTags().equals(editedBillItem.getTags())) {
-      billItemToBeUpdated.setTags(editedBillItem.getTags());
-    }
+    billItemToBeUpdated.setCost(editedBillItem.getCost());
+    billItemToBeUpdated.setDescription(editedBillItem.getDescription());
+    billItemToBeUpdated.setExpression(editedBillItem.getExpression());
+    billItemToBeUpdated.setTags(editedBillItem.getTags());
   }
 
   @Transactional
