@@ -62,12 +62,11 @@ public class BillsDisplayView extends VerticalLayout { // wrapping layout is nee
     billsGrid.addColumn(new LocalDateRenderer<>(BillDto::getDate, DateTimeFormatter.ISO_DATE))
         .setHeader("Date").setFlexGrow(0).setWidth("100px");
     billsGrid.addColumn(BillDto::getTotalCost).setHeader("Cost").setFlexGrow(0).setWidth("100px");
-    billsGrid.addColumn(new ComponentRenderer<>(this::billItemDisplayComponent)).setHeader("Bill items").setFlexGrow(0).setWidth("600px");
-    billsGrid.addColumn(new ComponentRenderer<>(this::auditDisplayComponent)).setHeader("Audit").setFlexGrow(0).setWidth("400px");
-    billsGrid.addColumn(new ComponentRenderer<>(this::operationsComponent)).setHeader("Operations").setFlexGrow(0).setWidth("150px");
+    billsGrid.addColumn(new ComponentRenderer<>(this::billItemDisplayComponent)).setHeader("Bill items");
     billsGrid.getStyle().set("border", "1px solid gray");
-    billsGrid.setSelectionMode(Grid.SelectionMode.NONE);
     billsGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COMPACT);
+    billsGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
+    billsGrid.setItemDetailsRenderer(new ComponentRenderer<>(this::billItemsDetailsComponent));
 
     HorizontalLayout horizontalLayout = new HorizontalLayout(filterTextField);
     horizontalLayout.setPadding(false);
@@ -98,9 +97,7 @@ public class BillsDisplayView extends VerticalLayout { // wrapping layout is nee
   @Override
   protected void onAttach(AttachEvent attachEvent) {
     UI ui = attachEvent.getUI();
-    broadcasterRegistration = Broadcaster.register(myEvent -> {
-      ui.access(this::refreshData);
-    });
+    broadcasterRegistration = Broadcaster.register(myEvent -> ui.access(this::refreshData));
   }
 
   @Override
@@ -109,7 +106,7 @@ public class BillsDisplayView extends VerticalLayout { // wrapping layout is nee
     broadcasterRegistration = null;
   }
 
-  public void refreshData() {
+  private void refreshData() {
     billsGrid.getDataProvider().refreshAll();
   }
 
@@ -140,20 +137,17 @@ public class BillsDisplayView extends VerticalLayout { // wrapping layout is nee
     return parentDiv;
   }
 
-  private Component operationsComponent(BillDto billDto) {
+  private Component billItemsDetailsComponent(BillDto billDto) {
     HorizontalLayout horizontalLayout = new HorizontalLayout();
-    horizontalLayout.setPadding(false);
-
+    horizontalLayout.getStyle().set("border", "1px solid");
     Button deleteButton = new Button(new Icon(VaadinIcon.FILE_REMOVE), clicked -> {
       billService.softDeleteBill(billDto);
       showDeleteConfirmation(billDto);
       fireDeleteBillEvent();
     });
-    Button editButton = new Button(new Icon(VaadinIcon.EDIT), clicked -> {
-      billEditorView.edit(billDto);
-    });
+    Button editButton = new Button(new Icon(VaadinIcon.EDIT), clicked -> billEditorView.edit(billDto));
+    horizontalLayout.add(auditDisplayComponent(billDto), deleteButton, editButton);
 
-    horizontalLayout.add(editButton, deleteButton);
     return horizontalLayout;
   }
 
