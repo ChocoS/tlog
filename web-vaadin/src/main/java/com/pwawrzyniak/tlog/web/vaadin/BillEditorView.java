@@ -54,7 +54,7 @@ public class BillEditorView extends VerticalLayout {
 
   private TagService tagService;
 
-  private BillDto editedBill;
+  private Long editedBillId;
 
   @Value("${tlog.food-tag}")
   private String foodTag;
@@ -87,8 +87,7 @@ public class BillEditorView extends VerticalLayout {
       }
     });
     Button saveBillButton = new Button("Save bill", event -> {
-      BillDto.BillDtoBuilder billBuilder = BillDto.builder().date(billDate.getValue())
-          .id(editedBill != null ? editedBill.getId() : null);
+      BillDto.BillDtoBuilder billBuilder = BillDto.builder().date(billDate.getValue()).id(editedBillId);
 
       if (fastFoodExpressionTextField.getValue() != null && fastFoodExpressionTextField.getValue().length() > 0) {
         billBuilder.billItems(Collections.singletonList(BillItemDto.builder()
@@ -119,10 +118,7 @@ public class BillEditorView extends VerticalLayout {
         showMessage(messageLines);
       }
     });
-    editCancelButton.addClickListener(clicked -> {
-      editedBill = null;
-      clearBillForms();
-    });
+    editCancelButton.addClickListener(clicked -> clearBillForms());
     editCancelButton.setVisible(false);
 
     fastFoodExpressionTextField.addValueChangeListener(event -> {
@@ -184,6 +180,7 @@ public class BillEditorView extends VerticalLayout {
     editCancelButton.setVisible(false);
     fastFoodExpressionTextField.setVisible(true);
     fastFoodExpressionTextField.clear();
+    editedBillId = null;
   }
 
   public void recalculateTotal() {
@@ -197,18 +194,22 @@ public class BillEditorView extends VerticalLayout {
   public void edit(BillDto billDto) {
     editCancelButton.setVisible(true);
     fastFoodExpressionTextField.setVisible(false);
-    editedBill = billDto;
-    displayEditedBill();
+    editedBillId = billDto.getId();
+    displayBill(billDto);
   }
 
-  private void displayEditedBill() {
-    billDate.setValue(editedBill.getDate());
+  public void copy(BillDto billDto) {
+    displayBill(billDto);
+  }
+
+  private void displayBill(BillDto billDto) {
+    billDate.setValue(billDto.getDate());
     billItemEditorViews.forEach(this::remove);
     billItemEditorViews.clear();
-    IntStream.range(0, editedBill.getBillItems().size()).forEach(i -> {
+    IntStream.range(0, billDto.getBillItems().size()).forEach(i -> {
       BillItemEditorView billItemEditorView = new BillItemEditorView(tags, this);
       billItemEditorViews.add(billItemEditorView);
-      billItemEditorView.display(editedBill.getBillItems().get(i));
+      billItemEditorView.display(billDto.getBillItems().get(i));
     });
     billItemEditorViews.forEach(this::add);
     recalculateTotal();

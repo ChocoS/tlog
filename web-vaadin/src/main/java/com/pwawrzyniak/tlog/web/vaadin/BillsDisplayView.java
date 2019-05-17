@@ -146,7 +146,8 @@ public class BillsDisplayView extends VerticalLayout { // wrapping layout is nee
       fireDeleteBillEvent();
     });
     Button editButton = new Button(new Icon(VaadinIcon.EDIT), clicked -> billEditorView.edit(billDto));
-    horizontalLayout.add(auditDisplayComponent(billDto), deleteButton, editButton);
+    Button copyButton = new Button(new Icon(VaadinIcon.COPY), clicked -> billEditorView.copy(billDto));
+    horizontalLayout.add(auditDisplayComponent(billDto), deleteButton, editButton, copyButton);
 
     return horizontalLayout;
   }
