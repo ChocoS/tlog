@@ -182,6 +182,7 @@ public class BillEditorView extends VerticalLayout {
     billItemEditorViews.forEach(this::add);
     totalValueTextField.setValue("0");
     editCancelButton.setVisible(false);
+    fastFoodExpressionTextField.setVisible(true);
     fastFoodExpressionTextField.clear();
   }
 
@@ -195,6 +196,7 @@ public class BillEditorView extends VerticalLayout {
 
   public void edit(BillDto billDto) {
     editCancelButton.setVisible(true);
+    fastFoodExpressionTextField.setVisible(false);
     editedBill = billDto;
     displayEditedBill();
   }
