@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +21,8 @@ import java.util.stream.Collectors;
 
 import static com.pwawrzyniak.tlog.backend.repository.BillSpecifications.freeTextSearch;
 import static com.pwawrzyniak.tlog.backend.repository.BillSpecifications.notDeleted;
+import static org.springframework.data.domain.Sort.Order.desc;
+import static org.springframework.data.domain.Sort.by;
 
 @Service
 public class BillService {
@@ -46,7 +47,7 @@ public class BillService {
     int pageNumber = offset / pageSize;
     int subListFrom = offset - pageNumber * pageSize;
     int subListTo = subListFrom + count;
-    Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by("date").descending());
+    Pageable pageable = PageRequest.of(pageNumber, pageSize, by(desc("date"), desc("createdAt")));
 
     List<Bill> bills = billRepository.findAll(notDeleted().and(freeTextSearch(searchString)), pageable).getContent();
     log.info("Offset {}, count {}, pageSize {}, pageNumber {}, subListFrom {}, subListTo {}, billsSize {}", offset, count, pageSize, pageNumber, subListFrom, subListTo, bills.size());
