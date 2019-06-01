@@ -66,14 +66,14 @@ public class BillService {
   }
 
   @Transactional
-  public BigDecimal totalCostOfAllNotDeletedBySearchString(String searchString) {
-    log.info("Calculating total for search string '{}'", searchString);
-    return billRepository.totalCostOfAllNotDeletedBySearchString(searchString);
+  public int countAllNotDeleted() {
+    return countAllNotDeletedBySearchString(null);
   }
 
   @Transactional
-  public List<BillDto> findNotDeletedBillsFirstPage() {
-    return findAllNotDeletedBySearchString(0, 50, null);
+  public BigDecimal totalCostOfAllNotDeletedBySearchString(String searchString) {
+    log.info("Calculating total for search string '{}'", searchString);
+    return billRepository.totalCostOfAllNotDeletedBySearchString(searchString);
   }
 
   private int calculatePageSize(int offset, int count) {

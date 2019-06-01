@@ -9,18 +9,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Arrays;
-import java.util.Random;
 import java.util.Set;
 
 import static java.time.LocalDate.now;
 
-// TODO mark with test profile only, after it is no longer needed
 @Service
+@Profile("testData")
 public class DataInit implements ApplicationRunner {
 
   private static Logger log = LoggerFactory.getLogger(DataInit.class);
@@ -49,7 +48,7 @@ public class DataInit implements ApplicationRunner {
   }
 
   private void initializeBills() {
-    long count = billService.findNotDeletedBillsFirstPage().size();
+    int count = billService.countAllNotDeletedBySearchString(null);
     if (count == 0) {
       log.info("Database empty. Creating test repository...");
 
@@ -77,12 +76,6 @@ public class DataInit implements ApplicationRunner {
           billItem("10.99", "10.99", null, "food")));
       billService.saveBill(bill(now().minusDays(29),
           billItem("119.99", "119.99", null, "clothes")));
-//      Random random = new Random();
-//      for (int i=0; i<1000; i++) {
-//        String randomPrice = BigDecimal.valueOf(random.nextInt(10000), 2).toString();
-//        billService.saveBill(bill(now().minusDays(i),
-//            billItem(randomPrice, randomPrice, null, "food")));
-//      }
 
     } else {
       log.info("Database contains repository (count: {}). No test repository created.", count);
