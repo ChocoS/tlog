@@ -59,6 +59,13 @@ public class BillService {
   }
 
   @Transactional
+  public int countAllNotDeletedBySearchString(String searchString) {
+    Long result = billRepository.count(notDeletedAndFreeTextSearch(searchString));
+    log.info("Counted {} bills with search string '{}'", result, searchString);
+    return result.intValue();
+  }
+
+  @Transactional
   public BigDecimal totalCostOfAllNotDeletedBySearchString(String searchString) {
     log.info("Calculating total for search string '{}'", searchString);
     return billRepository.totalCostOfAllNotDeletedBySearchString(searchString);

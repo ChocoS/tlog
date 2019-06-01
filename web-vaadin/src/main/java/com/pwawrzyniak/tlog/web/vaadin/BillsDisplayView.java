@@ -48,6 +48,7 @@ public class BillsDisplayView extends VerticalLayout { // wrapping layout is nee
   private TextField filterTextField;
   private ConfigurableFilterDataProvider<BillDto, Void, String> configurableFilterDataProvider;
   private Grid.Column<BillDto> costColumn;
+  private Grid.Column<BillDto> dateColumn;
 
   public BillsDisplayView(@Autowired BillService billService, @Autowired BillEditorView billEditorView) {
     this.billService = billService;
@@ -60,9 +61,9 @@ public class BillsDisplayView extends VerticalLayout { // wrapping layout is nee
 
     billsGrid = new Grid<>();
     billsGrid.setDataProvider(configurableFilterDataProvider);
-    billsGrid.addColumn(new LocalDateRenderer<>(BillDto::getDate, DateTimeFormatter.ISO_DATE))
-        .setHeader("Date").setFlexGrow(0).setWidth("100px");
-    costColumn = billsGrid.addColumn(BillDto::getTotalCost).setHeader("Cost").setFlexGrow(0).setWidth("120px");
+    dateColumn = billsGrid.addColumn(new LocalDateRenderer<>(BillDto::getDate, DateTimeFormatter.ISO_DATE))
+        .setHeader("Date").setFlexGrow(0).setWidth("120px");
+    costColumn = billsGrid.addColumn(BillDto::getTotalCost).setHeader("Cost").setFlexGrow(0).setWidth("150px");
     billsGrid.addColumn(new ComponentRenderer<>(this::billItemDisplayComponent)).setHeader("Bill items");
     billsGrid.getStyle().set("border", "1px solid gray");
     billsGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COMPACT);
@@ -80,17 +81,18 @@ public class BillsDisplayView extends VerticalLayout { // wrapping layout is nee
     setPadding(false);
     setSpacing(false);
 
-    refreshTotalCost();
+    refreshTotals();
   }
 
-  private void refreshTotalCost() {
+  private void refreshTotals() {
     costColumn.setFooter("Total: " + billService.totalCostOfAllNotDeletedBySearchString(filterTextField.getValue()));
+    dateColumn.setFooter("Count: " + billService.countAllNotDeletedBySearchString(filterTextField.getValue()));
   }
 
   private ConfigurableFilterDataProvider<BillDto, Void, String> billsGridDataProvider(@Autowired BillService billService) {
     DataProvider<BillDto, String> dataProvider = DataProvider.fromFilteringCallbacks(
         query -> billService.findAllNotDeletedBySearchString(query.getOffset(), query.getLimit(), query.getFilter().orElse(null)).stream(),
-        query -> billService.findAllNotDeletedBySearchString(query.getOffset(), query.getLimit(), query.getFilter().orElse(null)).size()
+        query -> billService.countAllNotDeletedBySearchString(query.getFilter().orElse(null))
     );
 
     return dataProvider.withConfigurableFilter();
@@ -111,7 +113,7 @@ public class BillsDisplayView extends VerticalLayout { // wrapping layout is nee
   private void refreshData() {
     configurableFilterDataProvider.setFilter(filterTextField.getValue());
     billsGrid.getDataProvider().refreshAll();
-    refreshTotalCost();
+    refreshTotals();
   }
 
   private Component auditDisplayComponent(BillDto billDto) {
