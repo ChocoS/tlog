@@ -10,7 +10,6 @@ import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.ListJoin;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
@@ -18,12 +17,16 @@ import java.math.BigDecimal;
 
 public class BillSpecifications {
 
-  public static Specification<Bill> notDeleted() {
+  public static Specification<Bill> notDeletedAndFreeTextSearch(String searchString) {
+    return notDeleted().and(freeTextSearch(searchString));
+  }
+
+  private static Specification<Bill> notDeleted() {
     return (Root<Bill> root, CriteriaQuery<?> query, CriteriaBuilder builder) ->
         builder.equal(root.get(Bill_.deleted), Boolean.FALSE);
   }
 
-  public static Specification<Bill> freeTextSearch(String searchString) {
+  private static Specification<Bill> freeTextSearch(String searchString) {
     return dateLike(searchString)
         .or(tagLike(searchString))
         .or(descriptionLike((searchString)))
@@ -47,10 +50,14 @@ public class BillSpecifications {
   private static Specification<Bill> tagLike(String searchString) {
     return (Root<Bill> root, CriteriaQuery<?> query, CriteriaBuilder builder) -> {
       if (searchString != null && searchString.length() > 0) {
-        query.distinct(true);
-        ListJoin<Bill, BillItem> billItemJoin = root.join(Bill_.billItems);
-        SetJoin<BillItem, Tag> tagJoin = billItemJoin.join(BillItem_.tags);
-        return builder.like(tagJoin.get(Tag_.name), withWildcards(searchString));
+        Subquery<BillItem> sub = query.subquery(BillItem.class);
+        Root subRoot = sub.from(BillItem.class);
+        SetJoin<BillItem, Tag> tagJoin = subRoot.join(BillItem_.tags);
+        sub.select(subRoot);
+        sub.where(builder.and(builder.equal(root.get(Bill_.id), subRoot.get(BillItem_.bill).get(Bill_.id)),
+            builder.like(tagJoin.get(Tag_.name), withWildcards(searchString))
+        ));
+        return builder.exists(sub);
       } else {
         return builder.and(); // true
       }
@@ -60,11 +67,15 @@ public class BillSpecifications {
   private static Specification<Bill> descriptionLike(String searchString) {
     return (Root<Bill> root, CriteriaQuery<?> query, CriteriaBuilder builder) -> {
       if (searchString != null && searchString.length() > 0) {
-        query.distinct(true);
-        ListJoin<Bill, BillItem> billItemJoin = root.join(Bill_.billItems);
-        return builder.like(
-            builder.function("LOWER", String.class, billItemJoin.get(BillItem_.description)),
-            withWildcards(searchString.toLowerCase()));
+        Subquery<BillItem> sub = query.subquery(BillItem.class);
+        Root subRoot = sub.from(BillItem.class);
+        sub.select(subRoot);
+        sub.where(builder.and(builder.equal(root.get(Bill_.id), subRoot.get(BillItem_.bill).get(Bill_.id)),
+            builder.like(
+                builder.function("LOWER", String.class, subRoot.get(BillItem_.description)),
+                withWildcards(searchString))
+        ));
+        return builder.exists(sub);
       } else {
         return builder.and(); // true
       }
@@ -74,12 +85,15 @@ public class BillSpecifications {
   private static Specification<Bill> costLike(String searchString) {
     return (Root<Bill> root, CriteriaQuery<?> query, CriteriaBuilder builder) -> {
       if (searchString != null && searchString.length() > 0) {
-        query.distinct(true);
-        ListJoin<Bill, BillItem> billItemJoin = root.join(Bill_.billItems);
-        return builder.like(
-            builder.function("TO_CHAR", String.class, billItemJoin.get(BillItem_.cost)),
-            withWildcards(searchString)
-        );
+        Subquery<BillItem> sub = query.subquery(BillItem.class);
+        Root subRoot = sub.from(BillItem.class);
+        sub.select(subRoot);
+        sub.where(builder.and(builder.equal(root.get(Bill_.id), subRoot.get(BillItem_.bill).get(Bill_.id)),
+            builder.like(
+                builder.function("TO_CHAR", String.class, subRoot.get(BillItem_.cost)),
+                withWildcards(searchString))
+        ));
+        return builder.exists(sub);
       } else {
         return builder.and(); // true
       }

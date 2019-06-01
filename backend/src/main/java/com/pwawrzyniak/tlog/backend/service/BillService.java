@@ -14,13 +14,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.pwawrzyniak.tlog.backend.repository.BillSpecifications.freeTextSearch;
-import static com.pwawrzyniak.tlog.backend.repository.BillSpecifications.notDeleted;
+import static com.pwawrzyniak.tlog.backend.repository.BillSpecifications.notDeletedAndFreeTextSearch;
 import static org.springframework.data.domain.Sort.Order.desc;
 import static org.springframework.data.domain.Sort.by;
 
@@ -49,12 +49,19 @@ public class BillService {
     int subListTo = subListFrom + count;
     Pageable pageable = PageRequest.of(pageNumber, pageSize, by(desc("date"), desc("createdAt")));
 
-    List<Bill> bills = billRepository.findAll(notDeleted().and(freeTextSearch(searchString)), pageable).getContent();
-    log.info("Offset {}, count {}, pageSize {}, pageNumber {}, subListFrom {}, subListTo {}, billsSize {}", offset, count, pageSize, pageNumber, subListFrom, subListTo, bills.size());
+    List<Bill> bills = billRepository.findAll(notDeletedAndFreeTextSearch(searchString), pageable).getContent();
+    int billsSize = bills.size();
     bills = bills.subList(subListFrom, subListTo > bills.size() ? bills.size() : subListTo);
     List<BillDto> billDtoList = bills.stream().map(entityToDtoConverter::convertBill).collect(Collectors.toList());
-    log.info("Found {} bills with search string {}", billDtoList.size(), searchString);
+    log.info("Found {} bills with search string '{}' for offset {}, count {}, pageSize {}, pageNumber {}, subListFrom {}, subListTo {}, billsSize {}",
+        billDtoList.size(), searchString, offset, count, pageSize, pageNumber, subListFrom, subListTo, billsSize);
     return billDtoList;
+  }
+
+  @Transactional
+  public BigDecimal totalCostOfAllNotDeletedBySearchString(String searchString) {
+    log.info("Calculating total for search string '{}'", searchString);
+    return billRepository.totalCostOfAllNotDeletedBySearchString(searchString);
   }
 
   @Transactional

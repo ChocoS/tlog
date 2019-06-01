@@ -6,5 +6,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface BillRepository extends JpaRepository<Bill, Long>, JpaSpecificationExecutor<Bill> {
+public interface BillRepository extends JpaRepository<Bill, Long>, JpaSpecificationExecutor<Bill>,
+    BillRepositoryCustom {
 }

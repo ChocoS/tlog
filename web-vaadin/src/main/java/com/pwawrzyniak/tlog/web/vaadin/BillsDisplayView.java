@@ -47,6 +47,7 @@ public class BillsDisplayView extends VerticalLayout { // wrapping layout is nee
   private Registration broadcasterRegistration;
   private TextField filterTextField;
   private ConfigurableFilterDataProvider<BillDto, Void, String> configurableFilterDataProvider;
+  private Grid.Column<BillDto> costColumn;
 
   public BillsDisplayView(@Autowired BillService billService, @Autowired BillEditorView billEditorView) {
     this.billService = billService;
@@ -55,13 +56,13 @@ public class BillsDisplayView extends VerticalLayout { // wrapping layout is nee
     configurableFilterDataProvider = billsGridDataProvider(billService);
 
     filterTextField = new TextField("Filter");
-    filterTextField.addKeyPressListener(Key.ENTER, event -> refreshFilters());
+    filterTextField.addKeyPressListener(Key.ENTER, event -> refreshData());
 
     billsGrid = new Grid<>();
     billsGrid.setDataProvider(configurableFilterDataProvider);
     billsGrid.addColumn(new LocalDateRenderer<>(BillDto::getDate, DateTimeFormatter.ISO_DATE))
         .setHeader("Date").setFlexGrow(0).setWidth("100px");
-    billsGrid.addColumn(BillDto::getTotalCost).setHeader("Cost").setFlexGrow(0).setWidth("100px");
+    costColumn = billsGrid.addColumn(BillDto::getTotalCost).setHeader("Cost").setFlexGrow(0).setWidth("120px");
     billsGrid.addColumn(new ComponentRenderer<>(this::billItemDisplayComponent)).setHeader("Bill items");
     billsGrid.getStyle().set("border", "1px solid gray");
     billsGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COMPACT);
@@ -78,11 +79,12 @@ public class BillsDisplayView extends VerticalLayout { // wrapping layout is nee
     setHeight("500px");
     setPadding(false);
     setSpacing(false);
+
+    refreshTotalCost();
   }
 
-  private void refreshFilters() {
-    configurableFilterDataProvider.setFilter(filterTextField.getValue());
-    refreshData();
+  private void refreshTotalCost() {
+    costColumn.setFooter("Total: " + billService.totalCostOfAllNotDeletedBySearchString(filterTextField.getValue()));
   }
 
   private ConfigurableFilterDataProvider<BillDto, Void, String> billsGridDataProvider(@Autowired BillService billService) {
@@ -107,7 +109,9 @@ public class BillsDisplayView extends VerticalLayout { // wrapping layout is nee
   }
 
   private void refreshData() {
+    configurableFilterDataProvider.setFilter(filterTextField.getValue());
     billsGrid.getDataProvider().refreshAll();
+    refreshTotalCost();
   }
 
   private Component auditDisplayComponent(BillDto billDto) {
