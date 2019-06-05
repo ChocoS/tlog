@@ -7,6 +7,7 @@ import com.pwawrzyniak.tlog.backend.service.TagService;
 import com.pwawrzyniak.tlog.backend.validation.ExpressionEvaluator;
 import com.pwawrzyniak.tlog.web.vaadin.events.Broadcaster;
 import com.pwawrzyniak.tlog.web.vaadin.events.Event;
+import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.html.Div;
@@ -53,6 +54,7 @@ public class BillEditorView extends VerticalLayout {
   private TextField fastFoodExpressionTextField = new TextField("Fast food expression");
 
   private TagService tagService;
+  private BillService billService;
 
   private Long editedBillId;
 
@@ -61,6 +63,7 @@ public class BillEditorView extends VerticalLayout {
 
   public BillEditorView(@Autowired BillService billService, @Autowired TagService tagService) {
     this.tagService = tagService;
+    this.billService = billService;
     tags = tagService.findAllTagsSorted();
 
     IntStream.range(0, DEFAULT_NUMBER_OF_BILL_ITEMS).forEach(i -> billItemEditorViews.add(new BillItemEditorView(tags, this)));
@@ -86,38 +89,7 @@ public class BillEditorView extends VerticalLayout {
         recalculateTotal();
       }
     });
-    Button saveBillButton = new Button("Save bill", event -> {
-      BillDto.BillDtoBuilder billBuilder = BillDto.builder().date(billDate.getValue()).id(editedBillId);
-
-      if (fastFoodExpressionTextField.getValue() != null && fastFoodExpressionTextField.getValue().length() > 0) {
-        billBuilder.billItems(Collections.singletonList(BillItemDto.builder()
-            .cost(ExpressionEvaluator.evaluate(fastFoodExpressionTextField.getValue()).toPlainString())
-            .expression(fastFoodExpressionTextField.getValue())
-            .tags(Collections.singleton(foodTag))
-            .build()));
-      } else {
-        billBuilder.billItems(billItemEditorViews.stream().map(BillItemEditorView::readBillItemDto)
-            .filter(Objects::nonNull).collect(Collectors.toList()));
-      }
-
-      BillDto billDto = billBuilder.build();
-      Set<ConstraintViolation<BillDto>> constraintViolations = billService.validate(billDto);
-      if (constraintViolations.isEmpty()) {
-        billService.saveBill(billDto);
-        clearBillForms();
-        showConfirmation(billDto);
-        fireSaveNewBillEvent();
-      } else {
-        List<String> messageLines = new ArrayList<>();
-        messageLines.add("Bill is not valid! Violations:");
-        constraintViolations.forEach(violation -> {
-          messageLines.add(violation.getPropertyPath().toString() + ": " +
-              violation.getMessage() + ", invalid value: " + violation.getInvalidValue());
-        });
-        Collections.sort(messageLines);
-        showMessage(messageLines);
-      }
-    });
+    Button saveBillButton = new Button("Save bill", event -> saveBill());
     editCancelButton.addClickListener(clicked -> clearBillForms());
     editCancelButton.setVisible(false);
 
@@ -135,6 +107,7 @@ public class BillEditorView extends VerticalLayout {
     fastFoodExpressionTextField.setPreventInvalidInput(true);
     fastFoodExpressionTextField.setErrorMessage("");
     fastFoodExpressionTextField.setMaxLength(MAX_EXPRESSION_SIZE);
+    fastFoodExpressionTextField.addKeyPressListener(Key.ENTER, event -> saveBill());
 
     HorizontalLayout horizontalLayout = new HorizontalLayout();
     horizontalLayout.setPadding(false);
@@ -148,6 +121,39 @@ public class BillEditorView extends VerticalLayout {
     setWidth("100%");
     setSpacing(false);
     setPadding(false);
+  }
+
+  private void saveBill() {
+    BillDto.BillDtoBuilder billBuilder = BillDto.builder().date(billDate.getValue()).id(editedBillId);
+
+    if (fastFoodExpressionTextField.getValue() != null && fastFoodExpressionTextField.getValue().length() > 0) {
+      billBuilder.billItems(Collections.singletonList(BillItemDto.builder()
+          .cost(ExpressionEvaluator.evaluate(fastFoodExpressionTextField.getValue()).toPlainString())
+          .expression(fastFoodExpressionTextField.getValue())
+          .tags(Collections.singleton(foodTag))
+          .build()));
+    } else {
+      billBuilder.billItems(billItemEditorViews.stream().map(BillItemEditorView::readBillItemDto)
+          .filter(Objects::nonNull).collect(Collectors.toList()));
+    }
+
+    BillDto billDto = billBuilder.build();
+    Set<ConstraintViolation<BillDto>> constraintViolations = billService.validate(billDto);
+    if (constraintViolations.isEmpty()) {
+      billService.saveBill(billDto);
+      clearBillForms();
+      showConfirmation(billDto);
+      fireSaveNewBillEvent();
+    } else {
+      List<String> messageLines = new ArrayList<>();
+      messageLines.add("Bill is not valid! Violations:");
+      constraintViolations.forEach(violation -> {
+        messageLines.add(violation.getPropertyPath().toString() + ": " +
+            violation.getMessage() + ", invalid value: " + violation.getInvalidValue());
+      });
+      Collections.sort(messageLines);
+      showMessage(messageLines);
+    }
   }
 
   private void fireSaveNewBillEvent() {
