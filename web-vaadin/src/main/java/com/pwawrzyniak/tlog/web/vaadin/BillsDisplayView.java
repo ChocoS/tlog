@@ -54,7 +54,7 @@ public class BillsDisplayView extends VerticalLayout { // wrapping layout is nee
     this.billService = billService;
     this.billEditorView = billEditorView;
 
-    configurableFilterDataProvider = billsGridDataProvider(billService);
+    configurableFilterDataProvider = billsGridDataProvider();
 
     filterTextField = new TextField("Filter");
     filterTextField.addKeyPressListener(Key.ENTER, event -> refreshData());
@@ -74,8 +74,7 @@ public class BillsDisplayView extends VerticalLayout { // wrapping layout is nee
     horizontalLayout.setPadding(false);
     horizontalLayout.setAlignItems(Alignment.END);
 
-    add(horizontalLayout);
-    add(billsGrid);
+    add(horizontalLayout, billsGrid);
 
     setHeight("500px");
     setPadding(false);
@@ -89,7 +88,7 @@ public class BillsDisplayView extends VerticalLayout { // wrapping layout is nee
     dateColumn.setFooter("Count: " + billService.countAllNotDeletedBySearchString(filterTextField.getValue()));
   }
 
-  private ConfigurableFilterDataProvider<BillDto, Void, String> billsGridDataProvider(@Autowired BillService billService) {
+  private ConfigurableFilterDataProvider<BillDto, Void, String> billsGridDataProvider() {
     DataProvider<BillDto, String> dataProvider = DataProvider.fromFilteringCallbacks(
         query -> billService.findAllNotDeletedBySearchString(query.getOffset(), query.getLimit(), query.getFilter().orElse(null)).stream(),
         query -> billService.countAllNotDeletedBySearchString(query.getFilter().orElse(null))

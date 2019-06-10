@@ -21,7 +21,7 @@ public class BillSpecifications {
     return notDeleted().and(freeTextSearch(searchString));
   }
 
-  private static Specification<Bill> notDeleted() {
+  public static Specification<Bill> notDeleted() {
     return (Root<Bill> root, CriteriaQuery<?> query, CriteriaBuilder builder) ->
         builder.equal(root.get(Bill_.deleted), Boolean.FALSE);
   }

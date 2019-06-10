@@ -1,6 +1,7 @@
 package com.pwawrzyniak.tlog.backend.service;
 
 import com.pwawrzyniak.tlog.backend.dto.BillDto;
+import com.pwawrzyniak.tlog.backend.dto.TagTotalsPerMonthDto;
 import com.pwawrzyniak.tlog.backend.entity.Bill;
 import com.pwawrzyniak.tlog.backend.repository.BillRepository;
 import org.junit.Before;
@@ -9,13 +10,20 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 
 import javax.validation.Validation;
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static com.pwawrzyniak.tlog.backend.service.DataInit.bill;
 import static com.pwawrzyniak.tlog.backend.service.DataInit.billItem;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.times;
@@ -30,6 +38,8 @@ public class BillServiceTest {
   private BillRepository billRepository;
   @Mock
   private DtoToEntityConverter dtoToEntityConverter;
+  @Mock
+  private TagService tagService;
   private BillService billService = new BillService();
 
   @Before
@@ -37,6 +47,7 @@ public class BillServiceTest {
     setField(billService, billService.getClass().getDeclaredField("billRepository"), billRepository);
     setField(billService, billService.getClass().getDeclaredField("validator"), Validation.buildDefaultValidatorFactory().getValidator());
     setField(billService, billService.getClass().getDeclaredField("dtoToEntityConverter"), dtoToEntityConverter);
+    setField(billService, billService.getClass().getDeclaredField("tagService"), tagService);
     Bill bill = Bill.builder().id(1L).build();
     when(billRepository.save(Mockito.any())).thenReturn(bill);
     when(dtoToEntityConverter.convertBillDto(Mockito.any(BillDto.class))).thenReturn(bill);

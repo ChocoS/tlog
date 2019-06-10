@@ -16,8 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Push
 public class MainView extends VerticalLayout {
 
-  public MainView(@Autowired UserDetailsServiceImpl userDetailsService,
-                  @Autowired BillsDisplayView billsDisplayView, @Autowired BillEditorView bIllEditorView) {
+  public MainView(@Autowired UserDetailsServiceImpl userDetailsService, @Autowired BillsDisplayView billsDisplayView,
+                  @Autowired BillEditorView bIllEditorView, @Autowired TagTotalsPerMonthView tagTotalsPerMonthView) {
     Button logoutButton = new Button("Logout");
     logoutButton.getElement().setAttribute("onclick", "window.open('logout', '_self')");
     UserDto userDto = userDetailsService.getLoggedInUser();
@@ -26,7 +26,7 @@ public class MainView extends VerticalLayout {
     HorizontalLayout horizontalLayout = new HorizontalLayout();
     horizontalLayout.add(label, logoutButton);
 
-    add(horizontalLayout, bIllEditorView, billsDisplayView);
+    add(horizontalLayout, bIllEditorView, billsDisplayView, tagTotalsPerMonthView);
     setWidth("100%");
     setHorizontalComponentAlignment(Alignment.END, horizontalLayout);
   }

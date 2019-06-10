@@ -1,6 +1,7 @@
 package com.pwawrzyniak.tlog.backend.service;
 
 import com.pwawrzyniak.tlog.backend.dto.BillDto;
+import com.pwawrzyniak.tlog.backend.dto.TagTotalsPerMonthDto;
 import com.pwawrzyniak.tlog.backend.entity.Bill;
 import com.pwawrzyniak.tlog.backend.entity.BillItem;
 import com.pwawrzyniak.tlog.backend.repository.BillRepository;
@@ -15,16 +16,27 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.pwawrzyniak.tlog.backend.repository.BillSpecifications.notDeleted;
 import static com.pwawrzyniak.tlog.backend.repository.BillSpecifications.notDeletedAndFreeTextSearch;
+import static org.springframework.data.domain.Sort.Order.asc;
 import static org.springframework.data.domain.Sort.Order.desc;
 import static org.springframework.data.domain.Sort.by;
 
 @Service
+@Transactional
 public class BillService {
 
   private static Logger log = LoggerFactory.getLogger(BillService.class);
@@ -41,7 +53,9 @@ public class BillService {
   @Autowired
   private DtoToEntityConverter dtoToEntityConverter;
 
-  @Transactional
+  @Autowired
+  private TagService tagService;
+
   public List<BillDto> findAllNotDeletedBySearchString(int offset, int count, String searchString) {
     int pageSize = calculatePageSize(offset, count);
     int pageNumber = offset / pageSize;
@@ -58,19 +72,16 @@ public class BillService {
     return billDtoList;
   }
 
-  @Transactional
   public int countAllNotDeletedBySearchString(String searchString) {
     Long result = billRepository.count(notDeletedAndFreeTextSearch(searchString));
     log.info("Counted {} bills with search string '{}'", result, searchString);
     return result.intValue();
   }
 
-  @Transactional
   public int countAllNotDeleted() {
     return countAllNotDeletedBySearchString(null);
   }
 
-  @Transactional
   public BigDecimal totalCostOfAllNotDeletedBySearchString(String searchString) {
     log.info("Calculating total for search string '{}'", searchString);
     return billRepository.totalCostOfAllNotDeletedBySearchString(searchString);
@@ -84,7 +95,6 @@ public class BillService {
     return pageSize;
   }
 
-  @Transactional
   public boolean saveBill(BillDto billDto) {
     if (isValid(billDto)) {
       if (billDto.getId() != null) {
@@ -131,7 +141,6 @@ public class BillService {
     billItemToBeUpdated.setTags(editedBillItem.getTags());
   }
 
-  @Transactional
   public boolean softDeleteBill(BillDto billDto) {
     if (billDto != null && billDto.getId() != null) {
       Optional<Bill> optionalBill = billRepository.findById(billDto.getId());
@@ -150,5 +159,58 @@ public class BillService {
 
   private boolean isValid(BillDto billDto) {
     return validate(billDto).isEmpty();
+  }
+
+  public List<TagTotalsPerMonthDto> getTagTotalsPerMonthList(int offset, int limit) {
+    Map<LocalDate, Map<String, BigDecimal>> tagTotalsPerMonthMap = new HashMap<>();
+    int monthCount = getMonthCount();
+    List<String> tags = tagService.findAllTagsSorted();
+    LocalDate now = LocalDate.now().withDayOfMonth(1);
+
+    for (int i = 0; i < monthCount; i++) {
+      Map<String, BigDecimal> tagTotalMap = new HashMap<>();
+      tags.forEach(tag -> tagTotalMap.put(tag, BigDecimal.ZERO));
+      tagTotalsPerMonthMap.put(now.minusMonths(monthCount - i - 1), tagTotalMap);
+    }
+
+    List<Bill> bills = billRepository.findAll(notDeleted(), by(asc("date")));
+    bills.forEach(bill -> {
+      Map<String, BigDecimal> tagTotalMap = tagTotalsPerMonthMap.get(bill.getDate().withDayOfMonth(1));
+      bill.getBillItems().forEach(billItem -> {
+        billItem.getTags().forEach(tag -> {
+          tagTotalMap.put(tag.getName(), tagTotalMap.get(tag.getName()).add(billItem.getCost()));
+        });
+      });
+    });
+
+    List<TagTotalsPerMonthDto> results = new ArrayList<>();
+    List<LocalDate> dates = new ArrayList<>(tagTotalsPerMonthMap.keySet());
+    dates.sort(Comparator.reverseOrder());
+    dates.forEach(date -> {
+      TagTotalsPerMonthDto.TagTotalsPerMonthDtoBuilder tagTotalsPerMonthDtoBuilder = TagTotalsPerMonthDto.builder();
+      tagTotalsPerMonthDtoBuilder.date(date);
+      tagTotalsPerMonthDtoBuilder.tagTotalMap(tagTotalsPerMonthMap.get(date).entrySet().stream()
+          .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toString())));
+      results.add(tagTotalsPerMonthDtoBuilder.build());
+    });
+
+    if (offset > results.size()) {
+      return Collections.emptyList();
+    }
+    int toIndex = offset + limit;
+    if (toIndex > results.size()) {
+      toIndex = results.size();
+    }
+    return results.subList(offset, toIndex);
+  }
+
+  public int getMonthCount() {
+    Pageable pageable = PageRequest.of(0, 1, by(asc("date")));
+    List<Bill> bills = billRepository.findAll(notDeleted(), pageable).getContent();
+    if (bills.size() > 0) {
+      Bill oldestBill = bills.get(0);
+      return (int) ChronoUnit.MONTHS.between(oldestBill.getDate().withDayOfMonth(1), LocalDate.now().withDayOfMonth(1)) + 1;
+    }
+    return 1;
   }
 }

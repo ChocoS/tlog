@@ -2,6 +2,7 @@ package com.pwawrzyniak.tlog.server;
 
 import com.pwawrzyniak.tlog.backend.dto.BillDto;
 import com.pwawrzyniak.tlog.backend.dto.BillItemDto;
+import com.pwawrzyniak.tlog.backend.dto.TagTotalsPerMonthDto;
 import com.pwawrzyniak.tlog.backend.entity.User;
 import com.pwawrzyniak.tlog.backend.repository.BillRepository;
 import com.pwawrzyniak.tlog.backend.service.BillService;
@@ -20,6 +21,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 import static com.pwawrzyniak.tlog.backend.service.DataInit.bill;
@@ -113,5 +115,45 @@ public class TlogApplicationTest {
     assertEquals("32", billItemDto.getExpression());
     assertEquals("desc", billItemDto.getDescription());
     assertEquals(Set.of("gift"), billItemDto.getTags());
+  }
+
+  @Test
+  public void getTagTotalsPerMonthTest() {
+    // given
+    LocalDate now = LocalDate.now().withDayOfMonth(1);
+    billService.saveBill(bill(now.minusDays(70),
+        billItem("12.34", "12+0.34", "mleko", "food"),
+        billItem("20.99", "10+4.5+6.49", "chemia", "maintenance")));
+    billService.saveBill(bill(now.minusDays(47),
+        billItem("85", "85", "basen", "education", "piotr")));
+    billService.saveBill(bill(now.minusDays(45),
+        billItem("6.49", "6.49", null, "food")));
+    billService.saveBill(bill(now.minusDays(42),
+        billItem("122.99", "122.99", null, "other"),
+        billItem("26.98", "26.98", null, "clothes"),
+        billItem("7.08", "7.08", null, "maintenance"),
+        billItem("132.17", "289.22-157.05", null, "food")));
+    billService.saveBill(bill(now.minusDays(39),
+        billItem("15.74", "15.74", null, "other"),
+        billItem("99.99", "99.99", "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi sit amet blandit" +
+            " massa, egestas porta enim. Quisque eget odio vitae ante molestie mollis at quis nunc. Donec posuere," +
+            " nibh at varius fringilla, est nunc fringilla turpis, sit", "clothes"),
+        billItem("7.08", "7.08", null, "maintenance")));
+    billService.saveBill(bill(now.minusDays(36),
+        billItem("11.21", "11.21", null, "food")));
+    billService.saveBill(bill(now.minusDays(23),
+        billItem("10.99", "10.99", null, "food")));
+    billService.saveBill(bill(now.minusDays(20),
+        billItem("119.99", "119.99", null, "food")));
+
+    // when
+    List<TagTotalsPerMonthDto> tagTotalsPerMonthDtoList = billService.getTagTotalsPerMonthList(0, 50);
+
+    // then
+    assertEquals(4, tagTotalsPerMonthDtoList.size());
+    assertEquals(now, tagTotalsPerMonthDtoList.get(0).getDate());
+    assertEquals("0", tagTotalsPerMonthDtoList.get(0).getTagTotalMap().get("food"));
+    assertEquals(now.minusMonths(1), tagTotalsPerMonthDtoList.get(1).getDate());
+    assertEquals("130.98", tagTotalsPerMonthDtoList.get(1).getTagTotalMap().get("food"));
   }
 }
