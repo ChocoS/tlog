@@ -43,7 +43,8 @@ import static com.vaadin.flow.component.notification.Notification.Position.TOP_C
 @UIScope
 public class BillEditorView extends VerticalLayout {
 
-  private static final int DEFAULT_NUMBER_OF_BILL_ITEMS = 3;
+  public static final String COST_FIELD_WIDTH = "80px";
+  private static final int DEFAULT_NUMBER_OF_BILL_ITEMS = 5;
   private static final int MAX_NUMBER_OF_BILL_ITEMS = 10;
 
   private List<String> tags;
@@ -73,6 +74,7 @@ public class BillEditorView extends VerticalLayout {
     totalValueTextField.setValue("0");
     totalValueTextField.setReadOnly(true);
     totalValueTextField.setTabIndex(-1);
+    totalValueTextField.setWidth(COST_FIELD_WIDTH);
 
     Button addBillItemButton = new Button("Add bill item", event -> {
       if (billItemEditorViews.size() < MAX_NUMBER_OF_BILL_ITEMS) {

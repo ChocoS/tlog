@@ -23,6 +23,7 @@ import static com.pwawrzyniak.tlog.backend.validation.ValidationConstants.EXPRES
 import static com.pwawrzyniak.tlog.backend.validation.ValidationConstants.MAX_DESCRIPTION_SIZE;
 import static com.pwawrzyniak.tlog.backend.validation.ValidationConstants.MAX_EXPRESSION_SIZE;
 import static com.pwawrzyniak.tlog.backend.validation.ValidationConstants.MAX_TAG_SIZE;
+import static com.pwawrzyniak.tlog.web.vaadin.BillEditorView.COST_FIELD_WIDTH;
 
 public class BillItemEditorView extends VerticalLayout {
 
@@ -56,6 +57,7 @@ public class BillItemEditorView extends VerticalLayout {
     costTextField.setValue("0");
     costTextField.setReadOnly(true);
     costTextField.setTabIndex(-1);
+    costTextField.setWidth(COST_FIELD_WIDTH);
 
     descriptionTextField.setWidth("24em");
     descriptionTextField.setMaxLength(MAX_DESCRIPTION_SIZE);

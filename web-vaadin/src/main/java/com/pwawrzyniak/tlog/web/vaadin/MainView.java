@@ -23,11 +23,15 @@ public class MainView extends VerticalLayout {
     UserDto userDto = userDetailsService.getLoggedInUser();
     Label label = new Label("Hello " + userDto.getFirstName());
 
-    HorizontalLayout horizontalLayout = new HorizontalLayout();
-    horizontalLayout.add(label, logoutButton);
+    HorizontalLayout topBar = new HorizontalLayout();
+    topBar.add(label, logoutButton);
 
-    add(horizontalLayout, bIllEditorView, billsDisplayView, tagTotalsPerMonthView);
+    HorizontalLayout billEditorAndView = new HorizontalLayout();
+    billEditorAndView.setWidth("100%");
+    billEditorAndView.add(bIllEditorView, billsDisplayView);
+
+    add(topBar, billEditorAndView, tagTotalsPerMonthView);
     setWidth("100%");
-    setHorizontalComponentAlignment(Alignment.END, horizontalLayout);
+    setHorizontalComponentAlignment(Alignment.END, topBar);
   }
 }
