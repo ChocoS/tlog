@@ -203,15 +203,17 @@ public class BillEditorView extends VerticalLayout {
     editCancelButton.setVisible(true);
     fastFoodExpressionTextField.setVisible(false);
     editedBillId = billDto.getId();
-    displayBill(billDto);
+    displayBill(billDto, true);
   }
 
   public void copy(BillDto billDto) {
-    displayBill(billDto);
+    displayBill(billDto, false);
   }
 
-  private void displayBill(BillDto billDto) {
-    billDate.setValue(billDto.getDate());
+  private void displayBill(BillDto billDto, boolean withDate) {
+    if (withDate) {
+      billDate.setValue(billDto.getDate());
+    }
     billItemEditorViews.forEach(this::remove);
     billItemEditorViews.clear();
     IntStream.range(0, billDto.getBillItems().size()).forEach(i -> {
